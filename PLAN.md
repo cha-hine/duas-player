@@ -37,7 +37,7 @@ MinIO is not used: its open-source repository was archived in April 2026.
 - [x] **0.4** Write `docker-compose.yaml` for web + PocketBase + worker. *Done when:* `docker compose up` starts all three.
 - [x] **0.5** Push the repo to GitHub/GitLab and connect it to Coolify. *Done when:* Coolify builds from the repo.
 - [x] **0.6** Set the domain and HTTPS in Coolify (`sakina.toophan.net` + `sakina-api.toophan.net`). *Done when:* both URLs load over HTTPS.
-- [ ] **0.7** Turn on automatic deploys on push. *Done when:* a commit to `main` redeploys.
+- [x] **0.7** Turn on automatic deploys on push. *Done when:* a commit to `main` redeploys.
 - [ ] **0.8** Set up daily backups of the PocketBase volume. *Done when:* a backup restores successfully on a test instance.
 
 ## Phase 1 — Brand and design system
@@ -63,13 +63,13 @@ MinIO is not used: its open-source repository was archived in April 2026.
 
 ## Phase 3 — Media worker
 
-- [ ] **3.1** Worker service that listens for new uploads in PocketBase. *Done when:* the worker logs each new upload.
-- [ ] **3.2** Audio: normalise loudness (-16 LUFS) and encode to AAC + Opus. *Done when:* processed files are attached to the track.
-- [ ] **3.3** Audio: read duration and generate a waveform JSON. *Done when:* both are saved on the track.
-- [ ] **3.4** Video: convert to HLS in 360p / 720p / 1080p. *Done when:* the HLS folder plays in a test page.
-- [ ] **3.5** Video: generate a poster image and duration. *Done when:* both are saved on the video.
-- [ ] **3.6** Status updates (`processing` → `ready` / `error`) with the error message. *Done when:* the admin panel shows the status.
-- [ ] **3.7** One-off bulk import of your existing files from a folder. *Done when:* all current files are in the library.
+- [x] **3.1** Worker service that picks up new uploads from PocketBase (polls for `status = pending`). *Done when:* the worker logs each new upload.
+- [x] **3.2** Audio: normalise loudness (-16 LUFS, two-pass) and encode to AAC (.m4a, plays everywhere). *Done when:* processed files are attached to the track.
+- [x] **3.3** Audio: read duration and generate a waveform JSON. *Done when:* both are saved on the track.
+- [x] **3.4** Video: convert to HLS in 360p / 720p / 1080p. *Done when:* the HLS folder plays in a test page.
+- [x] **3.5** Video: generate a poster image and duration. *Done when:* both are saved on the video.
+- [x] **3.6** Status updates (`processing` → `ready` / `error`) with the error message. *Done when:* the admin panel shows the status.
+- [ ] **3.7** One-off bulk import of your existing files from a folder (`scripts/import-folder.ts`, ready to run). *Done when:* all current files are in the library.
 
 ## Phase 4 — Public site and library
 

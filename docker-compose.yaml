@@ -22,6 +22,8 @@ services:
     restart: unless-stopped
     volumes:
       - pb_data:/pb/pb_data
+      # Worker output (HLS video streams), served at /media/...
+      - media:/pb/pb_public/media
     expose:
       - '8090'
     healthcheck:
@@ -35,6 +37,11 @@ services:
     restart: unless-stopped
     environment:
       PB_URL: http://pocketbase:8090
+      # A dedicated PocketBase superuser for the worker (set both in Coolify)
+      PB_WORKER_EMAIL: ${PB_WORKER_EMAIL}
+      PB_WORKER_PASSWORD: ${PB_WORKER_PASSWORD}
+    volumes:
+      - media:/media
     depends_on:
       pocketbase:
         condition: service_healthy
@@ -42,3 +49,4 @@ services:
 volumes:
   pb_data:
   uploads_tmp:
+  media:
