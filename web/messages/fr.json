@@ -63,5 +63,6 @@
 	"listen": "Écouter",
 	"listen_all": "Tout écouter",
 	"now_playing": "En cours de lecture",
-	"toggle_language": "Afficher : {language}"
+	"toggle_language": "Afficher : {language}",
+	"text_source": "Source du texte :"
 }

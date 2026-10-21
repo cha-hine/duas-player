@@ -84,7 +84,9 @@
 	{#if line}
 		{#each draft.languages as code (code)}
 			{#if line[code]}
-				<p lang={code} dir={TEXT_LANGUAGES[code].dir} class:ar={code === 'ar'}>{line[code]}</p>
+				<p lang={TEXT_LANGUAGES[code].lang} dir={TEXT_LANGUAGES[code].dir} class:ar={code === 'ar'}>
+					{line[code]}
+				</p>
 			{/if}
 		{/each}
 	{:else}

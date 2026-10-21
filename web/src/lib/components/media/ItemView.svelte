@@ -86,7 +86,7 @@
 							<span
 								class="text"
 								class:ar={code === 'ar'}
-								lang={code}
+								lang={TEXT_LANGUAGES[code].lang}
 								dir={TEXT_LANGUAGES[code].dir}
 								style:font-family={code === 'ar' ? undefined : TEXT_LANGUAGES[code].font}
 								>{line[code]}</span
@@ -95,6 +95,16 @@
 					{/each}
 				</button>
 			{/each}
+			{#if item.textSource}
+				<p class="credit">
+					{m.text_source()}
+					{#if item.textSource.url}
+						<a href={item.textSource.url} target="_blank" rel="noopener">{item.textSource.label}</a>
+					{:else}
+						{item.textSource.label}
+					{/if}
+				</p>
+			{/if}
 		</section>
 	{/if}
 
@@ -167,6 +177,15 @@
 		display: grid;
 		gap: var(--space-4);
 		max-width: 48rem;
+	}
+
+	.credit {
+		color: var(--color-text-muted);
+		font-size: var(--text-xs);
+	}
+
+	.credit a {
+		color: inherit;
 	}
 
 	.lines h2 {

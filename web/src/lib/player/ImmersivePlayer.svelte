@@ -166,7 +166,7 @@
 				<button
 					class="pill"
 					type="button"
-					lang={code}
+					lang={TEXT_LANGUAGES[code].lang}
 					aria-pressed={!settings.hidden.includes(code)}
 					aria-label={m.toggle_language({ language: TEXT_LANGUAGES[code].native })}
 					title={TEXT_LANGUAGES[code].native}

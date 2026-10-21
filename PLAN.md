@@ -117,7 +117,7 @@ Only audio of the categories ticked "synced_text" (Coran, Douas, Sahifa, Ziyarat
 - [x] **6.5** Preview in the real immersive player. *Done when:* the preview button opens the immersive view.
 - [x] **6.6** "Textes synchronisés" list (no text / text to sync / synced), publish toggle, drafts kept on the device until saved. *Done when:* draft content is hidden from the public site.
 - [x] **6.9** Player shows every language of a line (listeners hide the ones they don't want), words appear one after another and the line glows softly with the voice. *Done when:* Arabic, French and Gujarati play together.
-- [ ] **6.7** Text library: the text of a dua or ziyarat (Kumayl, Achoura…) saved once and reused for each new recitation. *Done when:* a second recitation only needs syncing.
+- [x] **6.7** Text library (`/admin/bibliotheque`): the text of a surah, dua or ziyarat saved once and reused for each recitation; the 114 surahs imported with `scripts/import-quran.ts` (Tanzil Arabic + a French translation), duas.org pages imported one by one from the admin. *Done when:* a second recitation only needs syncing.
 - [ ] **6.8** Automatic sync suggestion by speech recognition (Whisper), ideally on the home PC (see 3b.6). *Done when:* a track gets suggested timings to review.
 
 ## Phase 7 — Quran module
@@ -164,7 +164,7 @@ Only audio of the categories ticked "synced_text" (Coran, Douas, Sahifa, Ziyarat
 - [ ] **12.1** Privacy-friendly analytics (e.g. Umami). *Done when:* page views are counted without cookies.
 - [ ] **12.2** Performance check on a mid-range phone. *Done when:* the home page loads in under 2 seconds on 4G.
 - [ ] **12.3** Accessibility check (contrast, keyboard, screen reader). *Done when:* no major issues remain.
-- [ ] **12.4** Credits and licences page (reciters, translation, fonts). *Done when:* every source is credited.
+- [ ] **12.4** Credits and licences page (reciters, translations, fonts; Tanzil requires a credit with a link to tanzil.net, already shown under each synced Quran text). *Done when:* every source is credited.
 - [ ] **12.5** Launch. *Done when:* the site is public.
 
 ## Minimum first release

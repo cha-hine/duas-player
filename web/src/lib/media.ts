@@ -45,6 +45,8 @@ export type MediaItem = {
 	/** Video: HLS master playlist. */
 	hlsUrl: string | null;
 	lines: Line[];
+	/** Where the synced text comes from (library text source), to credit on the page. */
+	textSource: { label: string; url: string } | null;
 };
 
 export const toLanguage = (value: string): Language | null => (isLanguage(value) ? value : null);

@@ -131,7 +131,11 @@
 			<small>Ligne {selected + 1} · {clock(start)} → {clock(end)}</small>
 			{#if line}
 				{#each draft.languages as code (code)}
-					{#if line[code]}<p lang={code} dir={TEXT_LANGUAGES[code].dir} class:ar={code === 'ar'}>
+					{#if line[code]}<p
+							lang={TEXT_LANGUAGES[code].lang}
+							dir={TEXT_LANGUAGES[code].dir}
+							class:ar={code === 'ar'}
+						>
 							{line[code]}
 						</p>{/if}
 				{/each}

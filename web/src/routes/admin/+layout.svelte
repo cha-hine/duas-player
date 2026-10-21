@@ -11,7 +11,8 @@
 
 	const sections = [
 		{ href: '/admin', label: 'Ajouter un contenu' },
-		{ href: '/admin/textes', label: 'Textes synchronisés' }
+		{ href: '/admin/textes', label: 'Textes synchronisés' },
+		{ href: '/admin/bibliotheque', label: 'Bibliothèque de textes' }
 	];
 	const isActive = (href: string) =>
 		href === '/admin' ? page.url.pathname === href : page.url.pathname.startsWith(href);

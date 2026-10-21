@@ -63,5 +63,6 @@
 	"listen": "استمع",
 	"listen_all": "استمع إلى الكل",
 	"now_playing": "قيد التشغيل",
-	"toggle_language": "إظهار: {language}"
+	"toggle_language": "إظهار: {language}",
+	"text_source": "مصدر النص:"
 }

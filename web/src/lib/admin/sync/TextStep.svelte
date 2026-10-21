@@ -27,7 +27,8 @@
 					checked={draft.languages.includes(code)}
 					onchange={() => toggle(code)}
 				/>
-				{TEXT_LANGUAGES[code].fr} · <span lang={code}>{TEXT_LANGUAGES[code].native}</span>
+				{TEXT_LANGUAGES[code].fr} ·
+				<span lang={TEXT_LANGUAGES[code].lang}>{TEXT_LANGUAGES[code].native}</span>
 			</label>
 		{/each}
 	</fieldset>
@@ -43,10 +44,11 @@
 					>
 				</span>
 				<textarea
-					lang={code}
+					lang={TEXT_LANGUAGES[code].lang}
 					dir={lang.dir}
 					style:font-family={code === 'ar' ? 'var(--font-arabic)' : lang.font}
 					rows="16"
+					wrap="off"
 					value={draft.texts[code] ?? ''}
 					oninput={(e) => draft.setText(code, e.currentTarget.value)}></textarea>
 			</label>
@@ -68,8 +70,10 @@
 				{#each draft.lines as line, i (i)}
 					<li>
 						{#each draft.languages as code (code)}
-							<span lang={code} dir={TEXT_LANGUAGES[code].dir} class:missing={!line[code]}
-								>{line[code] ?? '—'}</span
+							<span
+								lang={TEXT_LANGUAGES[code].lang}
+								dir={TEXT_LANGUAGES[code].dir}
+								class:missing={!line[code]}>{line[code] ?? '—'}</span
 							>
 						{/each}
 					</li>

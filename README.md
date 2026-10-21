@@ -54,6 +54,19 @@ Create a **Docker Compose** resource in Coolify pointing at this repo; it uses `
   `synced_text` (Coran, Douas, Sahifa, Ziyarat). For each track: paste the text in one or more languages
   (Arabic, French, English, Gujarati, Urdu, Persian; one line per phrase), tap Space at the start of each
   line while it plays, fine-tune on the waveform, preview in the player, save.
+- **Text library:** `https://sakina.toophan.net/admin/bibliotheque` keeps the text of each surah, dua and
+  ziyarat once; in a track's editor, "Choisir dans la bibliothèque" reuses it, only the timing is left to do.
+  - Import a duas.org page (Arabic, transliteration, English) from the "Importer depuis duas.org" panel,
+    then add French, Gujarati… in the text's page.
+  - The 114 surahs: Tanzil Arabic text plus a French translation from the "41 traductions du Coran"
+    spreadsheet (list of translators in its "Bibliographie" sheet; Fakhri is the Twelver Shia one):
+    ```powershell
+    cd scripts; npm install
+    $env:SAKINA_EMAIL = "you@example.com"; $env:SAKINA_PASSWORD = "..."
+    node import-quran.ts --xlsx C:\path\41-traductions-Coran.xlsx --fr Fakhri --translit --tanzil en.qarai
+    ```
+    Tanzil's terms: the Arabic text is never modified and tanzil.net is credited with a link (shown under
+    the text on each page); Tanzil translations are for non-commercial use.
 - **PocketBase panel:** `https://sakina-api.toophan.net/_/` for editing records, categories and reciters.
   Uploads through this panel are limited to 100 MB by Cloudflare.
 - The content model lives in `pb/pb_migrations/`; PocketBase applies new migrations automatically on start.

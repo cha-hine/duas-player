@@ -10,11 +10,12 @@ type Collection = 'tracks' | 'videos';
 const COLLECTIONS: Collection[] = ['tracks', 'videos'];
 const READY = 'status = "ready"';
 const EXPAND = 'category,reciter';
+const ITEM_EXPAND = 'category,reciter,text';
 // Lists leave out the heavy fields (waveform, energy, synced text, search text)
 const LIST_FIELDS =
 	'id,collectionName,slug,title_fr,title_ar,description_fr,description_ar,language,duration,created,' +
 	'poster,stream,audio,hls_path,expand.category.*,expand.reciter.*';
-const ITEM_FIELDS = `${LIST_FIELDS},lines`;
+const ITEM_FIELDS = `${LIST_FIELDS},lines,expand.text.source,expand.text.source_url`;
 /** Upper bound per collection for one listing; plenty until the library grows a lot. */
 const LIST_MAX = 500;
 
@@ -67,7 +68,10 @@ function toItem(r: RecordModel): MediaItem {
 		posterUrl: isAudio ? null : fileUrl(r, r.poster, '640x360'),
 		audioUrl: isAudio ? fileUrl(r, r.stream || r.audio) : null,
 		hlsUrl: !isAudio && r.hls_path ? `${PUBLIC_PB_URL}/media/${r.hls_path}` : null,
-		lines: isAudio && Array.isArray(r.lines) ? (r.lines as Line[]) : []
+		lines: isAudio && Array.isArray(r.lines) ? (r.lines as Line[]) : [],
+		textSource: r.expand?.text?.source
+			? { label: r.expand.text.source, url: r.expand.text.source_url ?? '' }
+			: null
 	};
 }
 
@@ -125,7 +129,8 @@ export async function item(kind: 'audio' | 'video', slug: string): Promise<Media
 	const pb = client();
 	const list = await pb.collection(kind === 'audio' ? 'tracks' : 'videos').getList(1, 1, {
 		filter: pb.filter(`${READY} && slug = {:slug}`, { slug }),
-		expand: EXPAND,
+		// Audio may come with a library text, credited on its page
+		expand: kind === 'audio' ? ITEM_EXPAND : EXPAND,
 		fields: ITEM_FIELDS
 	});
 	return list.items[0] ? toItem(list.items[0]) : null;

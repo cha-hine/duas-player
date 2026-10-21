@@ -48,7 +48,7 @@
 						class="text"
 						class:primary={row === 0}
 						class:second={row === 1}
-						lang={code}
+						lang={TEXT_LANGUAGES[code].lang}
 						dir={lang.dir}
 						style:font-family={lang.font}
 						style:--row={row}

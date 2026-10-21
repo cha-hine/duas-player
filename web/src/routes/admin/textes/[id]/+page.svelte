@@ -7,6 +7,8 @@
 	import { Draft, type DraftData } from '#lib/admin/sync/draft.svelte.ts';
 	import TapStep from '#lib/admin/sync/TapStep.svelte';
 	import TextStep from '#lib/admin/sync/TextStep.svelte';
+	import LibraryPicker from '#lib/admin/LibraryPicker.svelte';
+	import type { LibraryText } from '#lib/admin/library.ts';
 	import { decodeForWaveform } from '#lib/admin/sync/time.ts';
 	import Button from '#lib/components/ui/Button.svelte';
 	import type { MediaItem } from '#lib/media.ts';
@@ -28,6 +30,24 @@
 	let message = $state('');
 	let saving = $state(false);
 	let restored = $state(false);
+	let picking = $state(false);
+	/** Library text this track's text comes from. */
+	let textId = $state('');
+	let libraryTitle = $state('');
+
+	function useLibraryText(text: LibraryText) {
+		if (!draft) return;
+		if (
+			draft.count &&
+			!confirm(`Remplacer le texte actuel par « ${text.title_fr} » ? Le minutage repart de zéro.`)
+		) {
+			return;
+		}
+		draft.loadText(text.lines ?? []);
+		textId = text.id;
+		libraryTitle = text.title_fr;
+		picking = false;
+	}
 
 	let audio = $state<HTMLAudioElement>();
 	let paused = $state(true);
@@ -43,9 +63,11 @@
 	$effect(() => {
 		if (!id) return;
 		pb.collection('tracks')
-			.getOne(id, { expand: 'category,reciter' })
+			.getOne(id, { expand: 'category,reciter,text' })
 			.then((r) => {
 				record = r;
+				textId = r.text ?? '';
+				libraryTitle = r.expand?.text?.title_fr ?? '';
 				const d = new Draft((r.lines as Line[]) ?? [], r.duration ?? 0);
 				// Work in progress kept on this device since the last save
 				try {
@@ -98,7 +120,13 @@
 		saving = true;
 		message = '';
 		try {
-			record = await pb.collection('tracks').update(record.id, { lines: draft.toSave() });
+			record = await pb
+				.collection('tracks')
+				.update(
+					record.id,
+					{ lines: draft.toSave(), text: textId },
+					{ expand: 'category,reciter,text' }
+				);
 			try {
 				localStorage.removeItem(draftKey);
 			} catch {
@@ -155,7 +183,8 @@
 			posterUrl: null,
 			audioUrl,
 			hlsUrl: null,
-			lines: draft.complete ? draft.lines : []
+			lines: draft.complete ? draft.lines : [],
+			textSource: null
 		};
 		player.playItems([item], item);
 		player.energy = (record.energy as number[]) ?? [];
@@ -214,6 +243,19 @@
 		></audio>
 
 		{#if step === 'text'}
+			<div class="library">
+				<Button variant="secondary" onclick={() => (picking = true)}
+					>Choisir dans la bibliothèque</Button
+				>
+				{#if libraryTitle}<small>Texte de la bibliothèque : {libraryTitle}</small>{/if}
+			</div>
+			{#if picking}
+				<LibraryPicker
+					category={record.category}
+					onpick={useLibraryText}
+					onclose={() => (picking = false)}
+				/>
+			{/if}
 			<TextStep {draft} />
 		{:else if step === 'sync' && audio}
 			<TapStep {draft} {audio} {time} {paused} />
@@ -279,6 +321,13 @@
 		color: var(--color-accent-text);
 		font-weight: 600;
 		cursor: pointer;
+	}
+
+	.library {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-3);
 	}
 
 	.steps {
