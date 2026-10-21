@@ -1,0 +1,16 @@
+# PocketBase local binary and data
+pb/pocketbase
+pb/pocketbase.exe
+pb/pb_data/
+
+# Node
+node_modules/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db

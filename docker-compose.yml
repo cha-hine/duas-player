@@ -1,0 +1,40 @@
+# Sakina stack for Coolify. Set the public domains per service in Coolify:
+#   web        -> https://sakina.toophan.net (port 3000)
+#   pocketbase -> https://api.sakina.toophan.net (port 8090, admin panel at /_/)
+services:
+  web:
+    build: ./web
+    restart: unless-stopped
+    environment:
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      PUBLIC_PB_URL: ${PUBLIC_PB_URL:-http://localhost:8090}
+      PB_URL: http://pocketbase:8090
+    expose:
+      - '3000'
+    depends_on:
+      - pocketbase
+
+  pocketbase:
+    build: ./pb
+    restart: unless-stopped
+    volumes:
+      - pb_data:/pb/pb_data
+    expose:
+      - '8090'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:8090/api/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    build: ./worker
+    restart: unless-stopped
+    environment:
+      PB_URL: http://pocketbase:8090
+    depends_on:
+      pocketbase:
+        condition: service_healthy
+
+volumes:
+  pb_data:
