@@ -15,3 +15,6 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# Home agent settings (contain a password)
+agent/start.ps1

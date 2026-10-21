@@ -66,10 +66,13 @@ export type TextLanguage = keyof typeof TEXT_LANGUAGES;
 /** Display order: Arabic first, then the others as listed above. */
 export const TEXT_LANGUAGE_CODES = Object.keys(TEXT_LANGUAGES) as TextLanguage[];
 
-export type Line = { start: number; end: number } & Partial<Record<TextLanguage, string>>;
+/** `n`: verse number of a Quran line (none for the basmala or for other texts). */
+export type Line = { start: number; end: number; n?: number } & Partial<
+	Record<TextLanguage, string>
+>;
 
 /** A line of the text library: the same, without timings. */
-export type TextLine = Partial<Record<TextLanguage, string>>;
+export type TextLine = { n?: number } & Partial<Record<TextLanguage, string>>;
 
 /** Languages that have text in at least one line, in display order. */
 export function lineLanguages(lines: TextLine[]): TextLanguage[] {

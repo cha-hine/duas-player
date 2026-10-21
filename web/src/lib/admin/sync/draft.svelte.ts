@@ -7,6 +7,7 @@ export type DraftData = {
 	languages: TextLanguage[];
 	texts: Partial<Record<TextLanguage, string>>;
 	starts: (number | null)[];
+	numbers?: (number | undefined)[];
 };
 
 const splitLines = (text: string | undefined) =>
@@ -20,6 +21,8 @@ export class Draft {
 	texts = $state<Partial<Record<TextLanguage, string>>>({});
 	/** Start of each line in seconds, or null while not synced yet. */
 	starts = $state<(number | null)[]>([]);
+	/** Verse number of each line (Quran texts from the library), kept by position. */
+	numbers = $state<(number | undefined)[]>([]);
 	duration = $state(0);
 
 	/** Lines of each selected language. */
@@ -40,6 +43,7 @@ export class Draft {
 		for (let i = 0; i < this.count; i++) {
 			const start = this.starts[i] ?? out[i - 1]?.start ?? 0;
 			const line: Line = { start, end: 0 };
+			if (this.numbers[i] !== undefined) line.n = this.numbers[i];
 			for (const code of this.languages) {
 				const text = this.rows[code]?.[i];
 				if (text) line[code] = text;
@@ -65,12 +69,13 @@ export class Draft {
 			this.languages.map((code) => [code, lines.map((line) => line[code] ?? '').join('\n')])
 		);
 		this.starts = lines.map(() => null);
+		this.numbers = lines.map((line) => line.n);
 	}
 
 	/** The text alone, as stored in the library. */
 	toTextLines(): TextLine[] {
 		return this.lines.map((line) => {
-			const text: TextLine = {};
+			const text: TextLine = line.n !== undefined ? { n: line.n } : {};
 			for (const code of this.languages) if (line[code]) text[code] = line[code];
 			return text;
 		});
@@ -100,13 +105,19 @@ export class Draft {
 	}
 
 	toJSON(): DraftData {
-		return { languages: this.languages, texts: this.texts, starts: this.starts };
+		return {
+			languages: this.languages,
+			texts: this.texts,
+			starts: this.starts,
+			numbers: this.numbers
+		};
 	}
 
 	restore(data: DraftData) {
 		this.languages = data.languages;
 		this.texts = data.texts;
 		this.starts = data.starts;
+		if (data.numbers) this.numbers = data.numbers;
 		this.fitStarts();
 	}
 }

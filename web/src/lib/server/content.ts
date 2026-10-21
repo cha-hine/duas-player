@@ -181,3 +181,61 @@ export async function trackSync(id: string): Promise<{ lines: Line[]; energy: nu
 		return null;
 	}
 }
+
+// ——— Quran: the surahs of the text library and the recitations synced with them ———
+
+let surahCache: { at: number; list: import('#lib/quran.ts').SurahSummary[] } | null = null;
+const SURAH_CACHE_MS = 10 * 60 * 1000;
+
+/** The 114 surahs (from the text library), with verse and recitation counts. */
+export async function surahs(): Promise<import('#lib/quran.ts').SurahSummary[]> {
+	if (surahCache && Date.now() - surahCache.at < SURAH_CACHE_MS) return surahCache.list;
+	const pb = client();
+	const [texts, recitations] = await Promise.all([
+		pb.collection('texts').getFullList({
+			filter: 'slug ~ "sourate-"',
+			sort: 'slug',
+			fields: 'id,slug,title_fr,title_ar,lines'
+		}),
+		pb
+			.collection('tracks')
+			.getFullList({ filter: `${READY} && text.slug ~ "sourate-"`, fields: 'text' })
+	]);
+	const counts: Record<string, number> = {};
+	for (const r of recitations) counts[r.text] = (counts[r.text] ?? 0) + 1;
+	const list = texts.map((t) => ({
+		number: Number(String(t.slug).replace('sourate-', '')),
+		id: t.id,
+		title_fr: t.title_fr,
+		title_ar: t.title_ar,
+		verses: (t.lines as Line[]).filter((l) => l.n).length,
+		recitations: counts[t.id] ?? 0
+	}));
+	surahCache = { at: Date.now(), list };
+	return list;
+}
+
+/** One surah's text and its synced recitations (audio playable with the verses). */
+export async function surah(number: number) {
+	const pb = client();
+	const slug = `sourate-${String(number).padStart(3, '0')}`;
+	const found = await pb
+		.collection('texts')
+		.getList(1, 1, { filter: pb.filter('slug = {:slug}', { slug }) });
+	const text = found.items[0];
+	if (!text) return null;
+	const recitations = await pb.collection('tracks').getFullList({
+		filter: pb.filter(`${READY} && text = {:id}`, { id: text.id }),
+		sort: '-created',
+		expand: ITEM_EXPAND,
+		fields: ITEM_FIELDS
+	});
+	return {
+		number,
+		title_fr: text.title_fr as string,
+		title_ar: text.title_ar as string,
+		source: { label: text.source as string, url: text.source_url as string },
+		lines: (text.lines ?? []) as Line[],
+		recitations: recitations.map(toItem)
+	};
+}

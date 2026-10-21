@@ -6,6 +6,7 @@
 	import AdjustStep from '#lib/admin/sync/AdjustStep.svelte';
 	import { Draft, type DraftData } from '#lib/admin/sync/draft.svelte.ts';
 	import TapStep from '#lib/admin/sync/TapStep.svelte';
+	import AutoSync from '#lib/admin/sync/AutoSync.svelte';
 	import TextStep from '#lib/admin/sync/TextStep.svelte';
 	import LibraryPicker from '#lib/admin/LibraryPicker.svelte';
 	import type { LibraryText } from '#lib/admin/library.ts';
@@ -258,6 +259,7 @@
 			{/if}
 			<TextStep {draft} />
 		{:else if step === 'sync' && audio}
+			<AutoSync bind:record {draft} {textId} onapplied={() => (step = 'adjust')} />
 			<TapStep {draft} {audio} {time} {paused} />
 		{:else if step === 'adjust' && audio}
 			<AdjustStep {draft} {audio} {time} {samples} sampleRate={SAMPLE_RATE} />

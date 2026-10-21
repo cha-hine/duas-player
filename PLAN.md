@@ -118,7 +118,7 @@ Only audio of the categories ticked "synced_text" (Coran, Douas, Sahifa, Ziyarat
 - [x] **6.6** "Textes synchronisés" list (no text / text to sync / synced), publish toggle, drafts kept on the device until saved. *Done when:* draft content is hidden from the public site.
 - [x] **6.9** Player shows every language of a line (listeners hide the ones they don't want), words appear one after another and the line glows softly with the voice. *Done when:* Arabic, French and Gujarati play together.
 - [x] **6.7** Text library (`/admin/bibliotheque`): the text of a surah, dua or ziyarat saved once and reused for each recitation; the 114 surahs imported with `scripts/import-quran.ts` (Tanzil Arabic + a French translation), duas.org pages imported one by one from the admin. *Done when:* a second recitation only needs syncing.
-- [ ] **6.8** Automatic sync suggestion by speech recognition (Whisper), ideally on the home PC (see 3b.6). *Done when:* a track gets suggested timings to review.
+- [x] **6.8** Automatic sync suggestion: the home agent (`agent/`, whisper.cpp large-v3-turbo + word alignment) suggests each line's start; tested on Al-Fatiha (Alafasy): every verse within 0.5 s. *Done when:* a track gets suggested timings to review.
 
 ## Phase 7 — Quran module
 

@@ -138,7 +138,9 @@ const source = [
 for (let sura = 1; sura <= 114; sura++) {
 	/** One line: verse `aya` of the spreadsheet with the Tanzil verse `key` ("sura|aya"). */
 	const line = (aya: string, key: string) => {
-		const out: Record<string, string> = { ar: arabic.verses.get(key) ?? '' };
+		const out: Record<string, string | number> = { ar: arabic.verses.get(key) ?? '' };
+		// Verse number (the basmala line, aya 0.5, has none)
+		if (Number.isInteger(Number(aya))) out.n = Number(aya);
 		const tl = translit?.get(`${sura}|${aya}`);
 		if (tl) out.translit = tl;
 		const fr = french.get(`${sura}|${aya}`);
