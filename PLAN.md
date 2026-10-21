@@ -71,6 +71,14 @@ MinIO is not used: its open-source repository was archived in April 2026.
 - [x] **3.6** Status updates (`processing` → `ready` / `error`) with the error message. *Done when:* the admin panel shows the status.
 - [ ] **3.7** One-off bulk import of your existing files from a folder (`scripts/import-folder.ts`, ready to run). *Done when:* all current files are in the library.
 
+## Phase 3b — Telegram bot
+
+- [x] **3b.1** Bot reads links (YouTube, Instagram, TikTok, Facebook, direct files) and audio/video files posted in the group. *Done when:* each one gets a status reply.
+- [x] **3b.2** Claude checks the content is relevant, picks the category and writes French/Arabic titles and the reciter. *Done when:* off-topic content is refused with a reason.
+- [x] **3b.3** Download (yt-dlp, Telegram up to 2 GB via a local Bot API server), create the published track/video, skip duplicates. *Done when:* the same link posted twice is added once.
+- [x] **3b.4** "Annuler" button for the sender and group admins; the status message turns to "En ligne" when the worker is done. *Done when:* a mistaken post can be removed from the group.
+- [ ] **3b.5** Set up the bot in Telegram and Coolify (token, group id, API id/hash, Anthropic key). *Done when:* a link posted in the group appears on the site.
+
 ## Phase 4 — Public site and library
 
 - [ ] **4.1** Home page: featured content, categories, latest additions. *Done when:* it shows real content from PocketBase.

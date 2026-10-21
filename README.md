@@ -61,6 +61,32 @@ Create a **Docker Compose** resource in Coolify pointing at this repo; it uses `
   node scripts\import-folder.ts D:\mes-fichiers --publish  # published directly
   ```
 
+## Telegram bot
+
+Members of the Telegram group post a link (YouTube, Instagram, TikTok, Facebook, direct `.mp3`/`.mp4`)
+or an audio/video file. The bot (`bot/`):
+
+1. reads the title and description (yt-dlp, or the Telegram file details);
+2. asks Claude whether it is relevant, which category it belongs to, and for clean French/Arabic titles
+   and the reciter; off-topic content is refused with a reason;
+3. downloads it (links with a video become videos; add `#audio` to keep only the sound, `#video` to force video),
+   creates the track or video **published**, and skips links already imported;
+4. replies in the group with an **Annuler** button (sender or group admins) and updates the message when it is online.
+
+Setup:
+
+1. **@BotFather**: `/newbot` → token. Then `/setprivacy` → *Disable*, so the bot sees all group messages.
+   Add the bot to the group.
+2. **my.telegram.org** → *API development tools* → `api_id` and `api_hash` (for files over 20 MB).
+3. **console.anthropic.com** → an API key.
+4. In Coolify set `TELEGRAM_BOT_TOKEN`, `TELEGRAM_API_ID`, `TELEGRAM_API_HASH`, `ANTHROPIC_API_KEY`, redeploy,
+   send `/id` in the group, then set `TELEGRAM_ALLOWED_CHATS` to that id (comma-separated for several groups)
+   and redeploy. Messages from other chats are ignored.
+
+The bot logs in to PocketBase with the worker's account (`PB_WORKER_EMAIL` / `PB_WORKER_PASSWORD`).
+If a site asks for a login (YouTube "confirm you're not a bot"), put a cookies file in the `bot_data`
+volume and set `YTDLP_ARGS=--cookies /data/cookies.txt`.
+
 ## Media processing (worker)
 
 After each upload, the worker (`worker/`) processes the file automatically:
