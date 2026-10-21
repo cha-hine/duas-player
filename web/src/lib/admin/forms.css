@@ -1,0 +1,72 @@
+/* Shared form styles for the admin pages */
+
+.form {
+	display: grid;
+	gap: var(--space-5);
+}
+
+.field {
+	display: grid;
+	gap: var(--space-2);
+}
+
+.field > span {
+	font-size: var(--text-sm);
+	font-weight: 600;
+}
+
+.field small {
+	color: var(--color-text-muted);
+	font-size: var(--text-xs);
+}
+
+.field .error {
+	color: #e5806b;
+}
+
+.input {
+	width: 100%;
+	min-height: 44px;
+	padding: var(--space-2) var(--space-3);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-sm);
+	background: var(--color-surface);
+	color: var(--color-text);
+}
+
+.input:focus-visible {
+	outline: 2px solid var(--color-focus);
+	outline-offset: 0;
+}
+
+.input[dir='rtl'] {
+	font-family: var(--font-arabic);
+	font-size: var(--text-lg);
+}
+
+.row-2 {
+	display: grid;
+	gap: var(--space-5);
+}
+
+@media (min-width: 640px) {
+	.row-2 {
+		grid-template-columns: 1fr 1fr;
+	}
+}
+
+.alert {
+	padding: var(--space-3) var(--space-4);
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--color-border);
+	background: var(--color-surface);
+	font-size: var(--text-sm);
+}
+
+.alert.error {
+	border-color: #e5806b;
+}
+
+.alert.success {
+	border-color: var(--color-secondary);
+}

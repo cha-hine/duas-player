@@ -43,6 +43,7 @@
 		"@fontsource-variable/noto-naskh-arabic": "^5.3.0",
 		"@fontsource/amiri-quran": "^5.3.0",
 		"@fontsource/cormorant-garamond": "^5.3.0",
-		"@lucide/svelte": "^1.61.0"
+		"@lucide/svelte": "^1.61.0",
+		"pocketbase": "^0.28.1"
 	}
 }

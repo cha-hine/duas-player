@@ -9,6 +9,9 @@ services:
       ORIGIN: ${ORIGIN:-http://localhost:3000}
       PUBLIC_PB_URL: ${PUBLIC_PB_URL:-http://localhost:8090}
       PB_URL: http://pocketbase:8090
+    volumes:
+      # Chunks of large uploads while they are being reassembled
+      - uploads_tmp:/data/uploads
     expose:
       - '3000'
     depends_on:
@@ -38,3 +41,4 @@ services:
 
 volumes:
   pb_data:
+  uploads_tmp:

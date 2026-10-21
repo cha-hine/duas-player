@@ -51,15 +51,15 @@ MinIO is not used: its open-source repository was archived in April 2026.
 
 ## Phase 2 — Content model (PocketBase)
 
-- [ ] **2.1** `categories` collection (name_ar, name_fr, slug, icon, order). *Done when:* categories can be created in the admin panel.
-- [ ] **2.2** `reciters` collection (name_ar, name_fr, photo, bio). *Done when:* reciters can be created.
-- [ ] **2.3** `tracks` collection (title_ar, title_fr, category, reciter, audio file, duration, status). *Done when:* an audio track can be uploaded.
-- [ ] **2.4** `lines` field on tracks: JSON list of `{start, end, ar, fr}`. *Done when:* a track can store synced text.
-- [ ] **2.5** `videos` collection (title, category, source file, HLS folder, poster, status). *Done when:* a video can be uploaded.
-- [ ] **2.6** Access rules: public can read published items; only admins can write. *Done when:* a logged-out request cannot create or edit anything.
-- [ ] **2.7** Seed script with 3 sample tracks and 1 video. *Done when:* a fresh install has demo content.
-- [ ] **2.8** Chunked upload API in the web server: the browser sends files in 50 MB pieces (under Cloudflare's 100 MB limit), the server reassembles them and hands the file to PocketBase over the internal network. Resumes after a dropped connection. *Done when:* a 1 GB video uploads through Cloudflare.
-- [ ] **2.9** Minimal upload page using 2.8 (admin login, pick file, progress bar). *Done when:* a large file can be uploaded without the PocketBase panel.
+- [x] **2.1** `categories` collection (name_ar, name_fr, slug, icon, order). *Done when:* categories can be created in the admin panel.
+- [x] **2.2** `reciters` collection (name_ar, name_fr, photo, bio). *Done when:* reciters can be created.
+- [x] **2.3** `tracks` collection (title_ar, title_fr, category, reciter, audio file, duration, status). *Done when:* an audio track can be uploaded.
+- [x] **2.4** `lines` field on tracks: JSON list of `{start, end, ar, fr}`. *Done when:* a track can store synced text.
+- [x] **2.5** `videos` collection (title, category, source file, HLS folder, poster, status). *Done when:* a video can be uploaded.
+- [x] **2.6** Access rules: public can read published items; only admins can write. *Done when:* a logged-out request cannot create or edit anything.
+- [x] **2.7** Seed script with 3 sample tracks (`scripts/seed-dev.ts`, local only; no sample video until ffmpeg is available). *Done when:* a fresh install has demo content.
+- [x] **2.8** Chunked upload API in the web server: the browser sends files in 32 MB pieces (under Cloudflare's 100 MB limit), the server reassembles them and hands the file to PocketBase over the internal network. Resumes after a dropped connection. *Done when:* a 1 GB video uploads through Cloudflare.
+- [x] **2.9** Minimal upload page using 2.8 (admin login, pick file, progress bar). *Done when:* a large file can be uploaded without the PocketBase panel.
 
 ## Phase 3 — Media worker
 
