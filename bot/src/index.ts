@@ -1,5 +1,6 @@
 // Telegram bot: members post links or audio/video files in the group, the bot downloads
 // them, lets Claude pick the category and titles, and publishes them on Sakina.
+import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -23,7 +24,10 @@ import { formatHint, sourcesFrom, type Source } from './sources.ts';
 const WATCH_INTERVAL_MS = 15_000;
 const WATCH_MAX_MS = 3 * 60 * 60 * 1000;
 
-const log = (msg: string) => console.log(`[bot] ${new Date().toISOString()} ${msg}`);
+/** The bot token appears in local Bot API file paths: never let it reach a message or a log. */
+const hideToken = (text: string) => (config.botToken ? text.replaceAll(config.botToken, '<token>') : text);
+
+const log = (msg: string) => console.log(`[bot] ${new Date().toISOString()} ${hideToken(msg)}`);
 
 const slugify = (text: string) =>
 	text
@@ -137,7 +141,7 @@ async function importSource({ api, msg, source }: Job) {
 			return;
 		}
 		log(`failed during ${stage}: ${e instanceof Error ? e.stack : e}`);
-		await say(e instanceof UserError ? `⚠️ Échec : ${e.message}` : `⚠️ Échec (${stage}) : ${describe(e)}`);
+		await say(hideToken(e instanceof UserError ? `⚠️ Échec : ${e.message}` : `⚠️ Échec (${stage}) : ${describe(e)}`));
 	} finally {
 		await rm(workDir, { recursive: true, force: true });
 	}
@@ -155,6 +159,7 @@ function describe(e: unknown): string {
 		return 'connexion à PocketBase refusée (vérifiez PB_WORKER_EMAIL / PB_WORKER_PASSWORD)';
 	}
 	if (/ECONNREFUSED|fetch failed/.test(message)) return 'service injoignable (PocketBase ou Telegram)';
+	if (/EACCES/.test(message)) return 'fichier Telegram illisible (droits du dossier partagé)';
 	return message.slice(0, 200);
 }
 
@@ -187,7 +192,9 @@ function watch(
 /** Telegram requires logging out of the cloud API once before using a local Bot API server. */
 async function moveToLocalServer() {
 	if (!config.apiRoot) return;
-	const marker = join(config.dataDir, '.cloud-logged-out');
+	// One marker per token, so a revoked and replaced token is logged out too
+	const tokenId = createHash('sha256').update(config.botToken).digest('hex').slice(0, 12);
+	const marker = join(config.dataDir, `.cloud-logged-out-${tokenId}`);
 	if (existsSync(marker)) return;
 	const res = await fetch(`https://api.telegram.org/bot${config.botToken}/logOut`, { method: 'POST' });
 	log(`cloud logOut before using local Bot API server: ${res.status}`);
