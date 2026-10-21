@@ -38,6 +38,6 @@ npm start
 
 Create a **Docker Compose** resource in Coolify pointing at this repo; it uses `docker-compose.yaml`.
 
-- Domains: `web` → `https://sakina.toophan.net` (port 3000), `pocketbase` → `https://api.sakina.toophan.net` (port 8090). The admin panel is at `https://api.sakina.toophan.net/_/`.
-- Environment variables: `ORIGIN=https://sakina.toophan.net`, `PUBLIC_PB_URL=https://api.sakina.toophan.net`.
+- Domains: `web` → `https://sakina.toophan.net` (port 3000), `pocketbase` → `https://sakina-api.toophan.net` (port 8090). The admin panel is at `https://sakina-api.toophan.net/_/`.
+- Environment variables: `ORIGIN=https://sakina.toophan.net`, `PUBLIC_PB_URL=https://sakina-api.toophan.net`.
 - The `pb_data` volume holds the database and uploads: include it in backups.
