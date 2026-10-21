@@ -1,0 +1,19 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"site_name": "Sakina",
+	"site_tagline": "Écouter · Comprendre · S'apaiser",
+	"site_description": "Coran, invocations et web TV islamique, en arabe et en français.",
+	"skip_to_content": "Aller au contenu",
+	"main_nav": "Navigation principale",
+	"nav_home": "Accueil",
+	"nav_quran": "Coran",
+	"nav_duas": "Invocations",
+	"nav_tv": "Web TV",
+	"theme_to_light": "Passer en mode clair",
+	"theme_to_dark": "Passer en mode sombre",
+	"coming_soon": "Bientôt disponible",
+	"quran_intro": "Les 114 sourates, récitées et traduites, verset par verset.",
+	"duas_intro": "Invocations et dhikr du quotidien, en arabe avec la traduction.",
+	"tv_intro": "Des chaînes en continu et des directs, à regarder ensemble.",
+	"footer_credits": "Contenus en arabe et en français"
+}

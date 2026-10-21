@@ -1,0 +1,102 @@
+/* Sakina design tokens. Dark is the default theme; light is opt-in via data-theme. */
+
+:root {
+	/* Brand palette */
+	--sakina-night: #0b1a2e;
+	--sakina-deep: #12263f;
+	--sakina-gold: #c9a24b;
+	--sakina-emerald: #1f7a6b;
+	--sakina-ivory: #f4efe3;
+	--sakina-mist: #8a9bb0;
+
+	/* Fonts */
+	--font-latin: 'Inter Variable', system-ui, sans-serif;
+	--font-display-latin: 'Cormorant Garamond', Georgia, serif;
+	--font-arabic: 'Noto Naskh Arabic Variable', 'Noto Naskh Arabic', serif;
+	--font-quran: 'Amiri Quran', var(--font-arabic);
+	--font-ui: var(--font-latin);
+	--font-display: var(--font-display-latin);
+
+	/* Type scale */
+	--text-xs: 0.75rem;
+	--text-sm: 0.875rem;
+	--text-base: 1rem;
+	--text-lg: 1.25rem;
+	--text-xl: 1.75rem;
+	--text-2xl: clamp(2rem, 5vw, 3rem);
+	--text-3xl: clamp(2.5rem, 8vw, 4.5rem);
+	--leading-tight: 1.2;
+	--leading-normal: 1.6;
+
+	/* Spacing */
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 0.75rem;
+	--space-4: 1rem;
+	--space-5: 1.5rem;
+	--space-6: 2rem;
+	--space-7: 3rem;
+	--space-8: 4rem;
+	--gutter: 16px;
+	--content-width: 72rem;
+
+	/* Shape and motion */
+	--radius-sm: 8px;
+	--radius-md: 14px;
+	--radius-lg: 22px;
+	--radius-pill: 999px;
+	--ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+	--duration: 180ms;
+
+	/* Layout */
+	--header-height: 64px;
+	--bottom-nav-height: 64px;
+}
+
+@media (min-width: 768px) {
+	:root {
+		--gutter: 32px;
+	}
+}
+
+:lang(ar) {
+	--font-ui: var(--font-arabic);
+	--font-display: var(--font-arabic);
+}
+
+:root,
+[data-theme='dark'] {
+	color-scheme: dark;
+	--color-bg: var(--sakina-night);
+	--color-surface: var(--sakina-deep);
+	--color-surface-2: #1a3150;
+	--color-border: rgb(244 239 227 / 0.12);
+	--color-text: var(--sakina-ivory);
+	--color-text-muted: var(--sakina-mist);
+	--color-accent: var(--sakina-gold);
+	--color-accent-text: var(--sakina-gold);
+	--color-on-accent: var(--sakina-night);
+	--color-secondary: var(--sakina-emerald);
+	--color-secondary-text: #3fb39c;
+	--color-on-secondary: var(--sakina-ivory);
+	--color-focus: var(--sakina-gold);
+	--shadow-md: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+[data-theme='light'] {
+	color-scheme: light;
+	--color-bg: var(--sakina-ivory);
+	--color-surface: #fbf8f1;
+	--color-surface-2: #ede6d6;
+	--color-border: rgb(11 26 46 / 0.12);
+	--color-text: var(--sakina-night);
+	--color-text-muted: #4f5f73;
+	--color-accent: var(--sakina-gold);
+	--color-accent-text: #7a5c18;
+	--color-on-accent: var(--sakina-night);
+	--color-secondary: var(--sakina-emerald);
+	--color-secondary-text: #17665a;
+	--color-on-secondary: var(--sakina-ivory);
+	--color-focus: #7a5c18;
+	--shadow-md: 0 8px 24px rgb(11 26 46 / 0.12);
+}

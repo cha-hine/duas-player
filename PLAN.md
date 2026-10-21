@@ -42,12 +42,12 @@ MinIO is not used: its open-source repository was archived in April 2026.
 
 ## Phase 1 — Brand and design system
 
-- [ ] **1.1** Finalise the logo; export favicon, app icons (192/512), social image. *Done when:* files are in `brand/` and `web/static/`.
-- [ ] **1.2** Define colour and spacing tokens as CSS variables (dark default + light mode). *Done when:* one `tokens.css` drives all colours.
-- [ ] **1.3** Self-host the fonts with Arabic + Latin subsets. *Done when:* fonts load with no external request.
-- [ ] **1.4** Build base components: button, card, tag, icon button, slider. *Done when:* a `/styleguide` page shows them all.
-- [ ] **1.5** Build the site layout: header, language switch, footer. *Done when:* layout works at phone and desktop width.
-- [ ] **1.6** Add French/Arabic translations and right-to-left switching. *Done when:* switching to Arabic mirrors the layout and translates the interface.
+- [x] **1.1** Finalise the logo; export favicon, app icons (192/512), social image. *Done when:* files are in `brand/` and `web/static/`.
+- [x] **1.2** Define colour and spacing tokens as CSS variables (dark default + light mode). *Done when:* one `tokens.css` drives all colours.
+- [x] **1.3** Self-host the fonts with Arabic + Latin subsets. *Done when:* fonts load with no external request.
+- [x] **1.4** Build base components: button, card, tag, icon button, slider. *Done when:* a `/styleguide` page shows them all.
+- [x] **1.5** Build the site layout: header, language switch, footer. *Done when:* layout works at phone and desktop width.
+- [x] **1.6** Add French/Arabic translations and right-to-left switching. *Done when:* switching to Arabic mirrors the layout and translates the interface.
 
 ## Phase 2 — Content model (PocketBase)
 
