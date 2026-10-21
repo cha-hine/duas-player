@@ -12,6 +12,9 @@ import type { Source } from './sources.ts';
 /** An error whose message can be shown as-is in the group. */
 export class UserError extends Error {}
 
+/** The link leads to no audio or video (an article, a profile…): ignored silently. */
+export class NotMediaError extends Error {}
+
 export type Metadata = {
 	title: string;
 	description: string;
@@ -63,6 +66,9 @@ function ytdlp(args: string[]): Promise<string> {
 		child.on('error', reject);
 		child.on('close', (code) => {
 			if (code === 0) return resolve(out);
+			if (/Unsupported URL|No video formats found|no video in this/i.test(err)) {
+				return reject(new NotMediaError(err.trim().split('\n').pop()));
+			}
 			if (/confirm you.re not a bot|Sign in to confirm/i.test(err)) {
 				return reject(
 					new UserError(

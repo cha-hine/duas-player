@@ -24,15 +24,25 @@ function urls(text: string | undefined, entities: MessageEntity[] | undefined): 
 	});
 }
 
-/** Links and audio/video attachments found in a message. */
-export function sourcesFrom(msg: Message): Source[] {
-	const found: Source[] = [];
-	const links = [...urls(msg.text, msg.entities), ...urls(msg.caption, msg.caption_entities)];
-	for (const url of new Set(links)) {
-		const full = /^https?:\/\//i.test(url) ? url : `https://${url}`;
-		found.push({ kind: 'url', url: full });
-	}
+// t.me/channel, t.me/+invite, t.me/joinchat/…: links to chats, not to media
+const TELEGRAM_CHAT_LINK = /^https?:\/\/(t|telegram)\.me\/(\+|joinchat\/)?[\w-]+\/?(\?.*)?$/i;
 
+/**
+ * Audio/video attachment of a message, or else the links in it. When a file is attached,
+ * links in its caption are credits (channel signatures) and are ignored.
+ */
+export function sourcesFrom(msg: Message): Source[] {
+	const attached = attachment(msg);
+	if (attached) return [attached];
+
+	const links = [...urls(msg.text, msg.entities), ...urls(msg.caption, msg.caption_entities)]
+		.map((url) => (/^https?:\/\//i.test(url) ? url : `https://${url}`))
+		.filter((url) => !TELEGRAM_CHAT_LINK.test(url));
+	return [...new Set(links)].map((url) => ({ kind: 'url', url }));
+}
+
+function attachment(msg: Message): Source | null {
+	const found: Source[] = [];
 	const file = (f: { file_id: string; file_unique_id: string; file_size?: number }, media: 'audio' | 'video') => ({
 		kind: 'telegram' as const,
 		fileId: f.file_id,
@@ -58,7 +68,7 @@ export function sourcesFrom(msg: Message): Source[] {
 		const media = msg.document.mime_type.startsWith('audio/') ? 'audio' : 'video';
 		found.push({ ...file(msg.document, media), fileName: msg.document.file_name, mimeType: msg.document.mime_type });
 	}
-	return found;
+	return found[0] ?? null;
 }
 
 /** "#audio" or "#video" in the message overrides the automatic choice for links. */

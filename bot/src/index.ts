@@ -8,6 +8,7 @@ import type { Message } from 'grammy/types';
 import { classify } from './classify.ts';
 import { config } from './config.ts';
 import {
+	NotMediaError,
 	UserError,
 	downloadTelegram,
 	downloadUrl,
@@ -42,16 +43,26 @@ type Job = { api: Api; msg: Message; source: Source };
 
 async function importSource({ api, msg, source }: Job) {
 	const chatId = msg.chat.id;
-	const status = await api.sendMessage(chatId, '⏳ Reçu, je regarde…', {
-		reply_parameters: { message_id: msg.message_id }
-	});
-	const say = (text: string, keyboard?: InlineKeyboard) =>
-		api.editMessageText(chatId, status.message_id, text, { reply_markup: keyboard }).catch(() => {});
+	// The status reply is posted on the first update, so links that are not media leave no trace
+	let statusId: number | undefined;
+	const say = async (text: string, keyboard?: InlineKeyboard) => {
+		if (statusId === undefined) {
+			const sent = await api.sendMessage(chatId, text, {
+				reply_parameters: { message_id: msg.message_id },
+				reply_markup: keyboard
+			});
+			statusId = sent.message_id;
+			return;
+		}
+		await api.editMessageText(chatId, statusId, text, { reply_markup: keyboard }).catch(() => {});
+	};
 
 	const workDir = await mkdtemp(join(config.dataDir, 'job-'));
 	try {
 		const caption = msg.text ?? msg.caption ?? '';
+		if (source.kind === 'telegram') await say('⏳ Reçu, je regarde…');
 		const meta = source.kind === 'url' ? await probeUrl(source.url) : telegramMetadata(source, caption);
+		if (source.kind === 'url') await say('⏳ Reçu, je regarde…');
 
 		const existing = await pb.findByOrigin(meta.origin);
 		if (existing) {
@@ -114,6 +125,10 @@ async function importSource({ api, msg, source }: Job) {
 			await rm(file.path, { force: true }).catch(() => {});
 		}
 	} catch (e) {
+		if (e instanceof NotMediaError) {
+			log(`ignored link without media: ${source.kind === 'url' ? source.url : ''}`);
+			return;
+		}
 		const reason = e instanceof UserError ? e.message : 'erreur inattendue';
 		log(`failed: ${e instanceof Error ? e.stack : e}`);
 		await say(`⚠️ Échec : ${reason}`);
