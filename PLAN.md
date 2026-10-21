@@ -34,7 +34,7 @@ MinIO is not used: its open-source repository was archived in April 2026.
 - [x] **0.1** Create the monorepo layout: `web/` (SvelteKit), `pb/` (PocketBase), `worker/` (ffmpeg), `brand/`. *Done when:* folders exist with a README each.
 - [x] **0.2** Scaffold SvelteKit with TypeScript and the Node adapter. *Done when:* `npm run dev` shows a page.
 - [x] **0.3** Add a PocketBase Dockerfile with a persistent data volume. *Done when:* the admin panel opens locally.
-- [ ] **0.4** Write `docker-compose.yml` for web + PocketBase + worker. *Done when:* `docker compose up` starts all three.
+- [ ] **0.4** Write `docker-compose.yaml` for web + PocketBase + worker. *Done when:* `docker compose up` starts all three.
 - [ ] **0.5** Push the repo to GitHub/GitLab and connect it to Coolify. *Done when:* Coolify builds from the repo.
 - [ ] **0.6** Set the domain and HTTPS in Coolify (`sakina.toophan.net` + `api.sakina.toophan.net`). *Done when:* both URLs load over HTTPS.
 - [ ] **0.7** Turn on automatic deploys on push. *Done when:* a commit to `main` redeploys.

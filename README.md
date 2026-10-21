@@ -36,7 +36,7 @@ npm start
 
 ## Deployment (Coolify)
 
-Create a **Docker Compose** resource in Coolify pointing at this repo; it uses `docker-compose.yml`.
+Create a **Docker Compose** resource in Coolify pointing at this repo; it uses `docker-compose.yaml`.
 
 - Domains: `web` → `https://sakina.toophan.net` (port 3000), `pocketbase` → `https://api.sakina.toophan.net` (port 8090). The admin panel is at `https://api.sakina.toophan.net/_/`.
 - Environment variables: `ORIGIN=https://sakina.toophan.net`, `PUBLIC_PB_URL=https://api.sakina.toophan.net`.
