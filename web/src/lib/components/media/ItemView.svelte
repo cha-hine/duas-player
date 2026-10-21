@@ -12,6 +12,8 @@
 		type MediaItem
 	} from '#lib/media.ts';
 	import { m } from '#lib/paraglide/messages.js';
+	import { player } from '#lib/player/player.svelte.ts';
+	import { lineAt } from '#lib/player/sync.ts';
 	import AudioPlayer from './AudioPlayer.svelte';
 	import MediaGrid from './MediaGrid.svelte';
 	import SectionTitle from './SectionTitle.svelte';
@@ -20,6 +22,10 @@
 	let { item, related }: { item: MediaItem; related: MediaItem[] } = $props();
 
 	const description = $derived(localized(item.description_fr, item.description_ar));
+	// Highlights the line being recited when this track is the one playing
+	const currentLine = $derived(
+		player.isCurrent(item) ? lineAt(item.lines, player.currentTime + 0.15) : -1
+	);
 	const seoDescription = $derived(
 		[otherTitle(item), item.reciter && name(item.reciter), item.category && name(item.category)]
 			.filter(Boolean)
@@ -39,7 +45,7 @@
 		{#if item.kind === 'video'}
 			<VideoPlayer src={item.hlsUrl} poster={item.posterUrl} label={title(item)} />
 		{:else}
-			<AudioPlayer {item} label={title(item)} />
+			<AudioPlayer {item} queue={related} />
 		{/if}
 	</div>
 
@@ -64,10 +70,16 @@
 		<section class="lines">
 			<h2>{m.synced_text()}</h2>
 			{#each item.lines as line, i (i)}
-				<div class="line">
-					{#if line.ar}<p class="ar" lang="ar" dir="rtl">{line.ar}</p>{/if}
-					{#if line.fr}<p class="fr" lang="fr" dir="ltr">{line.fr}</p>{/if}
-				</div>
+				<!-- Each line starts the recitation from there -->
+				<button
+					class="line"
+					class:current={i === currentLine}
+					type="button"
+					onclick={() => player.playFrom([item, ...related], item, line.start)}
+				>
+					{#if line.ar}<span class="ar" lang="ar" dir="rtl">{line.ar}</span>{/if}
+					{#if line.fr}<span class="fr" lang="fr" dir="ltr">{line.fr}</span>{/if}
+				</button>
 			{/each}
 		</section>
 	{/if}
@@ -150,14 +162,38 @@
 	.line {
 		display: grid;
 		gap: var(--space-1);
-		padding-bottom: var(--space-4);
+		width: 100%;
+		padding: var(--space-3) var(--space-4) var(--space-4);
+		border: none;
 		border-bottom: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: transparent;
+		text-align: start;
+		cursor: pointer;
+		transition: background-color var(--duration) var(--ease);
+	}
+
+	.line:hover {
+		background: var(--color-surface);
+	}
+
+	.line.current {
+		background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+	}
+
+	.line.current .ar {
+		color: var(--color-accent-text);
 	}
 
 	.ar {
 		font-family: var(--font-arabic);
 		font-size: 1.5rem;
 		line-height: 1.9;
+		text-align: right;
+	}
+
+	.fr {
+		text-align: left;
 	}
 
 	.fr {

@@ -106,7 +106,8 @@ When the bot says the cookies expired, export them again the same way.
 
 After each upload, the worker (`worker/`) processes the file automatically:
 
-- **Audio:** loudness evened out to -16 LUFS, encoded to AAC (`stream` field), duration and waveform.
+- **Audio:** loudness evened out to -16 LUFS, encoded to AAC (`stream` field), duration, waveform and a
+  loudness envelope (`energy`, 5 values per second) that animates the player's background.
 - **Video:** adaptive HLS stream in 360p / 720p / 1080p (never upscaled) served at
   `https://sakina-api.toophan.net/media/hls/<id>/master.m3u8`, plus a poster image.
 

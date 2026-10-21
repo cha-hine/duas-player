@@ -4,29 +4,38 @@
 	import Header from '#lib/components/layout/Header.svelte';
 	import SpatialNavigation from '#lib/components/layout/SpatialNavigation.svelte';
 	import LatestSidebar from '#lib/components/media/LatestSidebar.svelte';
+	import { page } from '$app/state';
 	import { m } from '#lib/paraglide/messages.js';
+	import PlayerHost from '#lib/player/PlayerHost.svelte';
+	import { player } from '#lib/player/player.svelte.ts';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
 </script>
 
-<a class="skip-link" href="#main">{m.skip_to_content()}</a>
+<!-- While the immersive player is open, the page behind it can't be reached or read -->
+<div class="page" inert={page.state.immersive ?? false}>
+	<a class="skip-link" href="#main">{m.skip_to_content()}</a>
 
-<Header theme={data.theme} />
+	<Header theme={data.theme} />
 
-<div class="shell">
-	<main id="main">
-		{@render children()}
-	</main>
-	{#if data.latest.length}
-		<div class="side">
-			<LatestSidebar items={data.latest} />
-		</div>
-	{/if}
+	<div class="shell">
+		<main id="main">
+			{@render children()}
+		</main>
+		{#if data.latest.length}
+			<div class="side">
+				<LatestSidebar items={data.latest} />
+			</div>
+		{/if}
+	</div>
+
+	<Footer />
+	{#if player.current}<div class="player-space"></div>{/if}
+	{#if data.device !== 'tv'}<BottomNav />{/if}
 </div>
 
-<Footer />
-{#if data.device !== 'tv'}<BottomNav />{/if}
+<PlayerHost />
 {#if data.device === 'tv'}<SpatialNavigation />{/if}
 
 <style>
@@ -45,6 +54,11 @@
 
 	.skip-link:focus {
 		transform: none;
+	}
+
+	/* Room for the mini player at the bottom, so it never hides the end of the page */
+	.player-space {
+		height: var(--mini-player-height);
 	}
 
 	/* Main content first (left in French, right in Arabic), new additions beside it */

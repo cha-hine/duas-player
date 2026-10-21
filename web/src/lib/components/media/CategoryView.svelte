@@ -1,5 +1,8 @@
 <script lang="ts">
+	import Play from '@lucide/svelte/icons/play';
 	import Seo from '#lib/components/Seo.svelte';
+	import Button from '#lib/components/ui/Button.svelte';
+	import { player } from '#lib/player/player.svelte.ts';
 	import { categoryIcon } from '#lib/icons.ts';
 	import { localized, name, type Category, type MediaItem } from '#lib/media.ts';
 	import { m } from '#lib/paraglide/messages.js';
@@ -9,6 +12,7 @@
 
 	const Icon = $derived(categoryIcon(category.icon));
 	const description = $derived(localized(category.description_fr, category.description_ar));
+	const audio = $derived(items.filter((i) => i.kind === 'audio'));
 </script>
 
 <Seo title={name(category)} description={description || undefined} />
@@ -21,6 +25,14 @@
 			{#if description}<p>{description}</p>{/if}
 			<small>{m.items_count({ count: items.length })}</small>
 		</div>
+		{#if audio.length}
+			<div class="listen">
+				<Button onclick={() => player.playItems(audio)}>
+					{#snippet icon()}<Play />{/snippet}
+					{m.listen_all()}
+				</Button>
+			</div>
+		{/if}
 	</header>
 
 	{#if items.length}
@@ -60,6 +72,15 @@
 
 	h1 {
 		font-size: var(--text-2xl);
+	}
+
+	.listen {
+		margin-inline-start: auto;
+	}
+
+	.listen :global(svg) {
+		width: 18px;
+		height: 18px;
 	}
 
 	p,

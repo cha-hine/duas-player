@@ -10,6 +10,11 @@ type Collection = 'tracks' | 'videos';
 const COLLECTIONS: Collection[] = ['tracks', 'videos'];
 const READY = 'status = "ready"';
 const EXPAND = 'category,reciter';
+// Lists leave out the heavy fields (waveform, energy, synced text, search text)
+const LIST_FIELDS =
+	'id,collectionName,slug,title_fr,title_ar,description_fr,description_ar,language,duration,created,' +
+	'poster,stream,audio,hls_path,expand.category.*,expand.reciter.*';
+const ITEM_FIELDS = `${LIST_FIELDS},lines`;
 /** Upper bound per collection for one listing; plenty until the library grows a lot. */
 const LIST_MAX = 500;
 
@@ -76,7 +81,8 @@ async function listItems(filter: string, params: Record<string, unknown> = {}, l
 			pb.collection(c).getList(1, limit, {
 				filter: pb.filter(`${READY} && (${filter})`, params),
 				sort: '-created',
-				expand: EXPAND
+				expand: EXPAND,
+				fields: LIST_FIELDS
 			})
 		)
 	);
@@ -119,7 +125,8 @@ export async function item(kind: 'audio' | 'video', slug: string): Promise<Media
 	const pb = client();
 	const list = await pb.collection(kind === 'audio' ? 'tracks' : 'videos').getList(1, 1, {
 		filter: pb.filter(`${READY} && slug = {:slug}`, { slug }),
-		expand: EXPAND
+		expand: EXPAND,
+		fields: ITEM_FIELDS
 	});
 	return list.items[0] ? toItem(list.items[0]) : null;
 }
@@ -154,4 +161,18 @@ export async function search(query: string, limit = 60): Promise<MediaItem[]> {
 	const filter = words.map((_, i) => `search ~ {:w${i}}`).join(' && ');
 	const params = Object.fromEntries(words.map((w, i) => [`w${i}`, w]));
 	return listItems(filter, params, limit);
+}
+
+/** Synced text and loudness envelope of a track, fetched by the player when it starts. */
+export async function trackSync(id: string): Promise<{ lines: Line[]; energy: number[] } | null> {
+	const pb = client();
+	try {
+		const r = await pb.collection('tracks').getOne(id, { fields: 'lines,energy' });
+		return {
+			lines: Array.isArray(r.lines) ? (r.lines as Line[]) : [],
+			energy: Array.isArray(r.energy) ? (r.energy as number[]) : []
+		};
+	} catch {
+		return null;
+	}
 }

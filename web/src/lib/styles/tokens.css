@@ -50,6 +50,7 @@
 	/* Layout */
 	--header-height: 64px;
 	--bottom-nav-height: 64px;
+	--mini-player-height: 72px;
 }
 
 @media (min-width: 768px) {

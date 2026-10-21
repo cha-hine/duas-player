@@ -93,18 +93,18 @@ MinIO is not used: its open-source repository was archived in April 2026.
 
 ## Phase 5 — Sakina player (core)
 
-- [ ] **5.1** Audio engine: play, pause, seek, speed, volume. *Done when:* a track plays from its page.
-- [ ] **5.2** Persistent mini-player that keeps playing between pages. *Done when:* navigating doesn't stop the audio.
-- [ ] **5.3** Lock-screen controls (Media Session API). *Done when:* play/pause works from the phone lock screen.
-- [ ] **5.4** Queue: next, previous, repeat, shuffle. *Done when:* a category can be played as a playlist.
-- [ ] **5.5** Fullscreen "immersive" view. *Done when:* tapping the mini-player opens it.
-- [ ] **5.6** First WebGL background shader (slow gradient + soft light). *Done when:* it runs at 60 fps on a mid-range phone.
-- [ ] **5.7** Make the background react to the audio (Web Audio analyser). *Done when:* it visibly breathes with the voice.
-- [ ] **5.8** Add 3 more background themes (night sky, geometric pattern, water). *Done when:* the user can switch between 4 themes.
-- [ ] **5.9** Synced text: show the current Arabic line with French below. *Done when:* text changes on time with the audio.
-- [ ] **5.10** Text animation (fade/rise in, current word or line in gold). *Done when:* transitions are smooth and readable.
-- [ ] **5.11** Settings: text size, show/hide French, show/hide Arabic. *Done when:* settings are remembered.
-- [ ] **5.12** Fallback for weak devices (CSS gradient instead of WebGL). *Done when:* old phones still work.
+- [x] **5.1** Audio engine: play, pause, seek, speed, volume. *Done when:* a track plays from its page.
+- [x] **5.2** Persistent mini-player that keeps playing between pages. *Done when:* navigating doesn't stop the audio.
+- [x] **5.3** Lock-screen controls (Media Session API). *Done when:* play/pause works from the phone lock screen.
+- [x] **5.4** Queue: next, previous, repeat, shuffle. *Done when:* a category can be played as a playlist.
+- [x] **5.5** Fullscreen "immersive" view. *Done when:* tapping the mini-player opens it.
+- [x] **5.6** First WebGL background shader (slow gradient + soft light). *Done when:* it runs at 60 fps on a mid-range phone.
+- [x] **5.7** Make the background react to the voice (loudness envelope computed by the worker; Web Audio would stop playback on iPhone when the screen locks). *Done when:* it visibly breathes with the voice.
+- [x] **5.8** Add 3 more background themes (night sky, ripples, water). *Done when:* the user can switch between 4 themes.
+- [x] **5.9** Synced text: show the current Arabic line with French below. *Done when:* text changes on time with the audio.
+- [x] **5.10** Text animation (fade/rise in, current word or line in gold). *Done when:* transitions are smooth and readable.
+- [x] **5.11** Settings: text size, show/hide French, show/hide Arabic. *Done when:* settings are remembered.
+- [x] **5.12** Fallback for weak devices (CSS gradient instead of WebGL). *Done when:* old phones still work.
 
 ## Phase 6 — Easy content adding
 

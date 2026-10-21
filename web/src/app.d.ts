@@ -8,7 +8,10 @@ declare global {
 			device: import('#lib/device.ts').Device;
 		}
 		// interface PageData {}
-		// interface PageState {}
+		interface PageState {
+			/** The immersive player is open (see src/lib/player/immersive.ts). */
+			immersive?: boolean;
+		}
 		// interface Platform {}
 	}
 }
