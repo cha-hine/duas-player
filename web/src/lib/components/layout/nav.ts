@@ -15,7 +15,7 @@ export type NavItem = {
 export const navItems: NavItem[] = [
 	{ path: '/', label: m.nav_home, icon: House },
 	{ path: '/coran', label: m.nav_quran, icon: BookOpen },
-	{ path: '/invocations', label: m.nav_duas, icon: HandHeart },
+	{ path: '/douas', label: m.nav_duas, icon: HandHeart },
 	{ path: '/tv', label: m.nav_tv, icon: Tv }
 ];
 

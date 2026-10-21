@@ -54,7 +54,7 @@ Create a **Docker Compose** resource in Coolify pointing at this repo; it uses `
   Uploads through this panel are limited to 100 MB by Cloudflare.
 - The content model lives in `pb/pb_migrations/`; PocketBase applies new migrations automatically on start.
 - **Bulk import** of a folder whose sub-folders are named after category slugs
-  (`adhkar-matin/`, `rappels/`…):
+  (`douas/`, `ziyarat/`, `latmiyat/`…):
   ```powershell
   $env:SAKINA_EMAIL = "you@example.com"; $env:SAKINA_PASSWORD = "..."
   node scripts\import-folder.ts D:\mes-fichiers            # drafts

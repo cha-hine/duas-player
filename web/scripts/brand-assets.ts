@@ -52,7 +52,7 @@ const ogText = Buffer.from(`
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
 	<text x="390" y="290" font-family="Georgia, serif" font-size="96" font-weight="600" fill="${IVORY}">Sakina</text>
 	<text x="390" y="370" font-family="Segoe UI, Arial, sans-serif" font-size="40" fill="${GOLD}">Écouter · Comprendre · S'apaiser</text>
-	<text x="390" y="430" font-family="Segoe UI, Arial, sans-serif" font-size="30" fill="${MIST}">Coran, invocations et web TV islamique</text>
+	<text x="390" y="430" font-family="Segoe UI, Arial, sans-serif" font-size="30" fill="${MIST}">Coran, douas, ziyarat et web TV</text>
 </svg>`);
 await sharp({ create: { width: 1200, height: 630, channels: 4, background: NIGHT } })
 	.composite([

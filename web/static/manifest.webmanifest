@@ -1,7 +1,7 @@
 {
 	"name": "Sakina — سكينة",
 	"short_name": "Sakina",
-	"description": "Coran, invocations et web TV islamique, en arabe et en français.",
+	"description": "Coran, douas, ziyarat et web TV des Ahl al-Bayt (as), en arabe et en français.",
 	"start_url": "/",
 	"display": "standalone",
 	"background_color": "#0b1a2e",

@@ -84,7 +84,7 @@ if (!reciter) {
 const demos: { slug: string; category: string; title_fr: string; title_ar: string; lines: Line[] }[] = [
 	{
 		slug: 'demo-subhanallah',
-		category: 'adhkar-matin',
+		category: 'taqibat',
 		title_fr: 'Gloire et louange à Allah',
 		title_ar: 'سبحان الله وبحمده',
 		lines: [
@@ -94,7 +94,7 @@ const demos: { slug: string; category: string; title_fr: string; title_ar: strin
 	},
 	{
 		slug: 'demo-tahlil',
-		category: 'adhkar-soir',
+		category: 'taqibat',
 		title_fr: "Il n'y a de divinité qu'Allah",
 		title_ar: 'لا إله إلا الله',
 		lines: [
@@ -104,7 +104,7 @@ const demos: { slug: string; category: string; title_fr: string; title_ar: strin
 	},
 	{
 		slug: 'demo-istighfar',
-		category: 'invocations',
+		category: 'douas',
 		title_fr: 'Demande de pardon',
 		title_ar: 'الاستغفار',
 		lines: [

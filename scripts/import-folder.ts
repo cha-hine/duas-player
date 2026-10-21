@@ -2,8 +2,8 @@
 // (so large files pass Cloudflare). Sub-folders name the category:
 //
 //   mes-fichiers/
-//     adhkar-matin/ayat-al-kursi.mp3
-//     rappels/la-patience.mp4
+//     douas/doua-kumayl.mp3
+//     latmiyat/ya-hussein.mp4
 //
 //   $env:SAKINA_EMAIL = "you@example.com"; $env:SAKINA_PASSWORD = "..."
 //   node scripts/import-folder.ts mes-fichiers [--publish]

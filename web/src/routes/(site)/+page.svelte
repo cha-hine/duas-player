@@ -11,7 +11,7 @@
 
 	const sections = [
 		{ path: '/coran', title: m.nav_quran, text: m.quran_intro, icon: BookOpen },
-		{ path: '/invocations', title: m.nav_duas, text: m.duas_intro, icon: HandHeart },
+		{ path: '/douas', title: m.nav_duas, text: m.duas_intro, icon: HandHeart },
 		{ path: '/tv', title: m.nav_tv, text: m.tv_intro, icon: Tv }
 	];
 </script>
@@ -29,7 +29,7 @@
 	<p class="description">{m.site_description()}</p>
 	<div class="cta">
 		<Button href={link('/coran')} size="lg">{m.nav_quran()}</Button>
-		<Button href={link('/invocations')} size="lg" variant="secondary">{m.nav_duas()}</Button>
+		<Button href={link('/douas')} size="lg" variant="secondary">{m.nav_duas()}</Button>
 	</div>
 </section>
 

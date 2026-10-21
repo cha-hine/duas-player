@@ -49,7 +49,7 @@
 	<section>
 		<h2>Typography</h2>
 		<p class="display">Cormorant Garamond — Écouter, comprendre</p>
-		<p>Inter — Les invocations du matin et du soir, avec la traduction française.</p>
+		<p>Inter — Doua Kumayl et Ziyarat Achoura, avec la traduction française.</p>
 		<p class="arabic" lang="ar" dir="rtl">Noto Naskh Arabic — أذكار الصباح والمساء</p>
 		<p class="quran" lang="ar">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</p>
 	</section>
