@@ -7,7 +7,14 @@ import { Bot, InlineKeyboard, type Api } from 'grammy';
 import type { Message } from 'grammy/types';
 import { classify } from './classify.ts';
 import { config } from './config.ts';
-import { UserError, downloadTelegram, downloadUrl, probeUrl, telegramMetadata } from './download.ts';
+import {
+	UserError,
+	downloadTelegram,
+	downloadUrl,
+	prepareCookies,
+	probeUrl,
+	telegramMetadata
+} from './download.ts';
 import * as pb from './pb.ts';
 import { formatHint, sourcesFrom, type Source } from './sources.ts';
 
@@ -213,6 +220,11 @@ try {
 } catch (e) {
 	log(`PocketBase not ready, imports will fail until fixed: ${e instanceof Error ? e.message : e}`);
 }
+log(
+	(await prepareCookies())
+		? `using YouTube cookies from ${config.cookiesFile}`
+		: `no YouTube cookies (${config.cookiesFile ?? 'YTDLP_COOKIES_FILE not set'}): YouTube may refuse downloads`
+);
 if (config.allowedChats.length === 0) {
 	log('TELEGRAM_ALLOWED_CHATS is empty: send /id in your group and set it, until then all content is ignored');
 } else {

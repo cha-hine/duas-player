@@ -84,8 +84,16 @@ Setup:
    and redeploy. Messages from other chats are ignored.
 
 The bot logs in to PocketBase with the worker's account (`PB_WORKER_EMAIL` / `PB_WORKER_PASSWORD`).
-If a site asks for a login (YouTube "confirm you're not a bot"), put a cookies file in the `bot_data`
-volume and set `YTDLP_ARGS=--cookies /data/cookies.txt`.
+**YouTube "Sign in to confirm you're not a bot".** YouTube blocks downloads from server addresses unless
+the bot uses the cookies of a YouTube account (use a secondary Google account, not your main one):
+
+1. In a **private browser window**, log in to YouTube with that account.
+2. With the extension *Get cookies.txt LOCALLY*, export the cookies of `youtube.com` (Netscape format).
+3. Close the private window right away (so YouTube does not renew those cookies in the browser).
+4. Coolify → service `bot` → **Storages** → add a **file mount** at `/config/youtube-cookies.txt`
+   with the content of the exported file, then redeploy. The logs show `using YouTube cookies`.
+
+When the bot says the cookies expired, export them again the same way.
 
 ## Media processing (worker)
 

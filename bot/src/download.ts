@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
-import { createWriteStream } from 'node:fs';
-import { stat } from 'node:fs/promises';
+import { createWriteStream, existsSync } from 'node:fs';
+import { copyFile, stat } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -38,11 +38,24 @@ const MIME: Record<string, string> = {
 	'.mkv': 'video/x-matroska'
 };
 
+let cookieArgs: string[] = [];
+
+/**
+ * Copies the mounted cookies file to a writable place (yt-dlp saves refreshed cookies
+ * back into it) and uses it for every download. Returns whether cookies are in use.
+ */
+export async function prepareCookies(): Promise<boolean> {
+	if (!config.cookiesFile || !existsSync(config.cookiesFile)) return false;
+	const copy = join(config.dataDir, 'cookies.txt');
+	await copyFile(config.cookiesFile, copy);
+	cookieArgs = ['--cookies', copy];
+	return true;
+}
+
 function ytdlp(args: string[]): Promise<string> {
 	return new Promise((resolve, reject) => {
-		const child = spawn(config.ytdlp, ['--no-playlist', '--js-runtimes', 'node', ...config.ytdlpArgs, ...args], {
-			stdio: ['ignore', 'pipe', 'pipe']
-		});
+		const fullArgs = ['--no-playlist', '--js-runtimes', 'node', ...cookieArgs, ...config.ytdlpArgs, ...args];
+		const child = spawn(config.ytdlp, fullArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
 		let out = '';
 		let err = '';
 		child.stdout.on('data', (d) => (out += d));
@@ -50,6 +63,15 @@ function ytdlp(args: string[]): Promise<string> {
 		child.on('error', reject);
 		child.on('close', (code) => {
 			if (code === 0) return resolve(out);
+			if (/confirm you.re not a bot|Sign in to confirm/i.test(err)) {
+				return reject(
+					new UserError(
+						cookieArgs.length
+							? 'YouTube refuse encore : les cookies ont sans doute expiré, il faut les renouveler'
+							: 'YouTube demande une connexion : il faut ajouter les cookies d’un compte YouTube (voir README)'
+					)
+				);
+			}
 			const reason = err.split('\n').filter((l) => l.startsWith('ERROR')).pop() ?? err.trim().split('\n').pop();
 			reject(new UserError(`téléchargement impossible (${reason?.replace(/^ERROR:\s*/, '') ?? `code ${code}`})`));
 		});

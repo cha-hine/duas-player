@@ -20,7 +20,9 @@ export const config = {
 	pbPassword: process.env.PB_PASSWORD ?? '',
 	dataDir: process.env.DATA_DIR ?? join(tmpdir(), 'sakina-bot'),
 	ytdlp: process.env.YTDLP_PATH ?? 'yt-dlp',
-	/** Extra yt-dlp arguments, e.g. "--cookies /data/cookies.txt" when a site asks for a login. */
+	/** Extra yt-dlp arguments, space-separated. */
 	ytdlpArgs: list(process.env.YTDLP_ARGS?.replaceAll(' ', ',')),
+	/** Cookies of a YouTube account (Netscape cookies.txt), for sites that ask "confirm you're not a bot". */
+	cookiesFile: process.env.YTDLP_COOKIES_FILE || undefined,
 	maxBytes: 4 * 1024 ** 3
 };

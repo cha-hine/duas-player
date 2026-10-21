@@ -60,6 +60,8 @@ services:
       PB_EMAIL: ${PB_WORKER_EMAIL}
       PB_PASSWORD: ${PB_WORKER_PASSWORD}
       YTDLP_ARGS: ${YTDLP_ARGS:-}
+      # Add a file mount in Coolify at this path with the cookies.txt of a YouTube account
+      YTDLP_COOKIES_FILE: ${YTDLP_COOKIES_FILE:-/config/youtube-cookies.txt}
     volumes:
       - bot_data:/data
       - telegram_files:/var/lib/telegram-bot-api
