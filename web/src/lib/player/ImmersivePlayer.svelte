@@ -14,6 +14,7 @@
 	import IconButton from '#lib/components/ui/IconButton.svelte';
 	import { formatDuration, name, title } from '#lib/media.ts';
 	import { m } from '#lib/paraglide/messages.js';
+	import { lineLanguages, TEXT_LANGUAGES } from '#lib/text-languages.ts';
 	import { closeImmersive } from './immersive.ts';
 	import { player } from './player.svelte.ts';
 	import { settings, THEMES, type Theme } from './settings.svelte.ts';
@@ -38,6 +39,8 @@
 	const BACK_CODES = new Set([10009, 461]);
 
 	const item = $derived(player.current!);
+	/** Languages the current track's text is written in, offered as toggles. */
+	const languages = $derived(lineLanguages(player.lines));
 	let playButton = $state<HTMLElement>();
 
 	$effect(() => {
@@ -159,21 +162,18 @@
 			<IconButton label={m.text_bigger()} onclick={() => settings.resizeText(1)}
 				><AArrowUp /></IconButton
 			>
-			<button
-				class="pill"
-				type="button"
-				lang="ar"
-				aria-pressed={settings.showArabic}
-				aria-label={m.toggle_arabic()}
-				onclick={() => settings.toggleLanguage('ar')}>ع</button
-			>
-			<button
-				class="pill"
-				type="button"
-				aria-pressed={settings.showFrench}
-				aria-label={m.toggle_french()}
-				onclick={() => settings.toggleLanguage('fr')}>Fr</button
-			>
+			{#each languages as code (code)}
+				<button
+					class="pill"
+					type="button"
+					lang={code}
+					aria-pressed={!settings.hidden.includes(code)}
+					aria-label={m.toggle_language({ language: TEXT_LANGUAGES[code].native })}
+					title={TEXT_LANGUAGES[code].native}
+					onclick={() => settings.toggleLanguage(code, languages)}
+					>{TEXT_LANGUAGES[code].short}</button
+				>
+			{/each}
 			<div class="themes" role="group" aria-label={m.player_theme()}>
 				{#each THEMES as theme (theme)}
 					<button

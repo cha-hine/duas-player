@@ -1,4 +1,5 @@
 // Listener preferences for the immersive player, remembered on this device.
+import { TEXT_LANGUAGE_CODES, type TextLanguage } from '#lib/text-languages.ts';
 
 export const THEMES = ['aube', 'nuit', 'ondes', 'eau'] as const;
 export type Theme = (typeof THEMES)[number];
@@ -7,13 +8,20 @@ export const TEXT_SCALES = [0.85, 1, 1.2, 1.45] as const;
 
 const KEY = 'sakina-player';
 
-type Saved = { theme: Theme; textScale: number; showArabic: boolean; showFrench: boolean };
+type Saved = {
+	theme: Theme;
+	textScale: number;
+	hidden: TextLanguage[];
+	// Before multilingual text: kept to read older saved settings
+	showArabic?: boolean;
+	showFrench?: boolean;
+};
 
 class PlayerSettings {
 	theme = $state<Theme>('aube');
 	textScale = $state(1);
-	showArabic = $state(true);
-	showFrench = $state(true);
+	/** Text languages the listener chose not to see. */
+	hidden = $state<TextLanguage[]>([]);
 
 	/** Reads saved preferences (browser only; storage may be unavailable). */
 	load() {
@@ -21,8 +29,12 @@ class PlayerSettings {
 			const saved: Partial<Saved> = JSON.parse(localStorage.getItem(KEY) ?? '{}');
 			if (saved.theme && THEMES.includes(saved.theme)) this.theme = saved.theme;
 			if (typeof saved.textScale === 'number') this.textScale = saved.textScale;
-			if (typeof saved.showArabic === 'boolean') this.showArabic = saved.showArabic;
-			if (typeof saved.showFrench === 'boolean') this.showFrench = saved.showFrench;
+			if (Array.isArray(saved.hidden)) {
+				this.hidden = saved.hidden.filter((code) => TEXT_LANGUAGE_CODES.includes(code));
+			} else {
+				if (saved.showArabic === false) this.hidden.push('ar');
+				if (saved.showFrench === false) this.hidden.push('fr');
+			}
 		} catch {
 			// private mode or blocked storage: keep defaults
 		}
@@ -30,12 +42,7 @@ class PlayerSettings {
 
 	save() {
 		try {
-			const value: Saved = {
-				theme: this.theme,
-				textScale: this.textScale,
-				showArabic: this.showArabic,
-				showFrench: this.showFrench
-			};
+			const value: Saved = { theme: this.theme, textScale: this.textScale, hidden: this.hidden };
 			localStorage.setItem(KEY, JSON.stringify(value));
 		} catch {
 			// not remembered, still applied for this visit
@@ -49,10 +56,19 @@ class PlayerSettings {
 		this.save();
 	}
 
-	/** At least one language stays visible. */
-	toggleLanguage(which: 'ar' | 'fr') {
-		if (which === 'ar' && (this.showFrench || !this.showArabic)) this.showArabic = !this.showArabic;
-		if (which === 'fr' && (this.showArabic || !this.showFrench)) this.showFrench = !this.showFrench;
+	/** Languages of `available` to display; never none. */
+	visible(available: TextLanguage[]): TextLanguage[] {
+		const shown = available.filter((code) => !this.hidden.includes(code));
+		return shown.length ? shown : available.slice(0, 1);
+	}
+
+	/** Shows or hides a language, keeping at least one of `available` visible. */
+	toggleLanguage(code: TextLanguage, available: TextLanguage[]) {
+		if (this.hidden.includes(code)) {
+			this.hidden = this.hidden.filter((c) => c !== code);
+		} else if (this.visible(available).filter((c) => c !== code).length > 0) {
+			this.hidden = [...this.hidden, code];
+		}
 		this.save();
 	}
 

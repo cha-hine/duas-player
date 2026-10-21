@@ -5,3 +5,5 @@ import '@fontsource/cormorant-garamond/500.css';
 import '@fontsource/cormorant-garamond/600.css';
 import '@fontsource-variable/noto-naskh-arabic';
 import '@fontsource/amiri-quran';
+import '@fontsource/noto-sans-gujarati/400.css';
+import '@fontsource/noto-nastaliq-urdu/400.css';

@@ -50,6 +50,10 @@ Create a **Docker Compose** resource in Coolify pointing at this repo; it uses `
 - **Upload page:** `https://sakina.toophan.net/admin`. Log in with the PocketBase superuser account.
   Files of any size (up to 10 GB) are sent in 32 MB pieces, so they pass Cloudflare's 100 MB limit,
   and an interrupted upload resumes where it stopped.
+- **Synced text:** `https://sakina.toophan.net/admin/textes` lists the audio of the categories ticked
+  `synced_text` (Coran, Douas, Sahifa, Ziyarat). For each track: paste the text in one or more languages
+  (Arabic, French, English, Gujarati, Urdu, Persian; one line per phrase), tap Space at the start of each
+  line while it plays, fine-tune on the waveform, preview in the player, save.
 - **PocketBase panel:** `https://sakina-api.toophan.net/_/` for editing records, categories and reciters.
   Uploads through this panel are limited to 100 MB by Cloudflare.
 - The content model lives in `pb/pb_migrations/`; PocketBase applies new migrations automatically on start.

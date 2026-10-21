@@ -106,14 +106,19 @@ MinIO is not used: its open-source repository was archived in April 2026.
 - [x] **5.11** Settings: text size, show/hide French, show/hide Arabic. *Done when:* settings are remembered.
 - [x] **5.12** Fallback for weak devices (CSS gradient instead of WebGL). *Done when:* old phones still work.
 
-## Phase 6 — Easy content adding
+## Phase 6 — Synced multilingual text (audio of Coran, Douas, Sahifa, Ziyarat)
 
-- [ ] **6.1** Simple admin page: drag-and-drop upload with title fields. *Done when:* a non-technical person can add a track.
-- [ ] **6.2** Paste the full text (Arabic + French, one line each). *Done when:* the text is split into lines automatically.
-- [ ] **6.3** Sync editor: play the audio and tap space at the start of each line. *Done when:* timings are saved.
-- [ ] **6.4** Fine-tune timings by dragging on the waveform. *Done when:* a line can be shifted precisely.
-- [ ] **6.5** Preview in the real player before publishing. *Done when:* the preview button opens the immersive view.
-- [ ] **6.6** Publish / unpublish toggle. *Done when:* draft content is hidden from the public site.
+Only audio of the categories ticked "synced_text" (Coran, Douas, Sahifa, Ziyarat by default); videos keep their own content.
+
+- [x] **6.1** Upload page in `/admin` (and the Telegram bot). *Done when:* a non-technical person can add a track.
+- [x] **6.2** Text step: one text block per language (Arabic, French, English, Gujarati, Urdu, Persian), one line per phrase, aligned preview and line-count warnings. *Done when:* the text is split into lines automatically.
+- [x] **6.3** Sync step: the audio plays and Space (or a big button) marks the start of each line; undo, resume from a line, 0.75× speed. *Done when:* timings are saved.
+- [x] **6.4** Adjust step: overview and zoomed waveform, drag a line's start, ±0.1 / ±0.5 s, replay one line, keyboard shortcuts. *Done when:* a line can be shifted precisely.
+- [x] **6.5** Preview in the real immersive player. *Done when:* the preview button opens the immersive view.
+- [x] **6.6** "Textes synchronisés" list (no text / text to sync / synced), publish toggle, drafts kept on the device until saved. *Done when:* draft content is hidden from the public site.
+- [x] **6.9** Player shows every language of a line (listeners hide the ones they don't want), words appear one after another and the line glows softly with the voice. *Done when:* Arabic, French and Gujarati play together.
+- [ ] **6.7** Text library: the text of a dua or ziyarat (Kumayl, Achoura…) saved once and reused for each new recitation. *Done when:* a second recitation only needs syncing.
+- [ ] **6.8** Automatic sync suggestion by speech recognition (Whisper), ideally on the home PC (see 3b.6). *Done when:* a track gets suggested timings to review.
 
 ## Phase 7 — Quran module
 

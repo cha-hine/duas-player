@@ -1,6 +1,7 @@
 // Content shapes shared by the server loaders and the pages.
 import { isLanguage, type Language } from '#lib/languages.ts';
 import { getLocale } from '#lib/paraglide/runtime.js';
+import type { Line } from '#lib/text-languages.ts';
 
 export type Category = {
 	id: string;
@@ -22,7 +23,7 @@ export type Reciter = {
 	photoUrl: string | null;
 };
 
-export type Line = { start: number; end: number; ar: string; fr: string };
+export type { Line };
 
 export type MediaItem = {
 	kind: 'audio' | 'video';

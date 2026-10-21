@@ -14,6 +14,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { player } from '#lib/player/player.svelte.ts';
 	import { lineAt } from '#lib/player/sync.ts';
+	import { isSynced, lineLanguages, TEXT_LANGUAGES } from '#lib/text-languages.ts';
 	import AudioPlayer from './AudioPlayer.svelte';
 	import MediaGrid from './MediaGrid.svelte';
 	import SectionTitle from './SectionTitle.svelte';
@@ -22,9 +23,12 @@
 	let { item, related }: { item: MediaItem; related: MediaItem[] } = $props();
 
 	const description = $derived(localized(item.description_fr, item.description_ar));
+	const languages = $derived(lineLanguages(item.lines));
 	// Highlights the line being recited when this track is the one playing
 	const currentLine = $derived(
-		player.isCurrent(item) ? lineAt(item.lines, player.currentTime + 0.15) : -1
+		player.isCurrent(item) && isSynced(item.lines)
+			? lineAt(item.lines, player.currentTime + 0.15)
+			: -1
 	);
 	const seoDescription = $derived(
 		[otherTitle(item), item.reciter && name(item.reciter), item.category && name(item.category)]
@@ -77,8 +81,18 @@
 					type="button"
 					onclick={() => player.playFrom([item, ...related], item, line.start)}
 				>
-					{#if line.ar}<span class="ar" lang="ar" dir="rtl">{line.ar}</span>{/if}
-					{#if line.fr}<span class="fr" lang="fr" dir="ltr">{line.fr}</span>{/if}
+					{#each languages as code (code)}
+						{#if line[code]}
+							<span
+								class="text"
+								class:ar={code === 'ar'}
+								lang={code}
+								dir={TEXT_LANGUAGES[code].dir}
+								style:font-family={code === 'ar' ? undefined : TEXT_LANGUAGES[code].font}
+								>{line[code]}</span
+							>
+						{/if}
+					{/each}
 				</button>
 			{/each}
 		</section>
@@ -185,18 +199,16 @@
 		color: var(--color-accent-text);
 	}
 
+	/* Each language aligned in its own direction (dir on the element) */
+	.text {
+		text-align: start;
+		color: var(--color-text-muted);
+	}
+
 	.ar {
 		font-family: var(--font-arabic);
 		font-size: 1.5rem;
 		line-height: 1.9;
-		text-align: right;
-	}
-
-	.fr {
-		text-align: left;
-	}
-
-	.fr {
-		color: var(--color-text-muted);
+		color: var(--color-text);
 	}
 </style>

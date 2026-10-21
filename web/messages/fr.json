@@ -60,9 +60,8 @@
 	"theme_eau": "Eau",
 	"text_smaller": "Texte plus petit",
 	"text_bigger": "Texte plus grand",
-	"toggle_arabic": "Afficher l'arabe",
-	"toggle_french": "Afficher le français",
 	"listen": "Écouter",
 	"listen_all": "Tout écouter",
-	"now_playing": "En cours de lecture"
+	"now_playing": "En cours de lecture",
+	"toggle_language": "Afficher : {language}"
 }

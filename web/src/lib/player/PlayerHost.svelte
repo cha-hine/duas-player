@@ -26,8 +26,9 @@
 			.then((res) => (res.ok ? res.json() : null))
 			.then((sync: { lines: typeof player.lines; energy: number[] } | null) => {
 				if (!sync || player.current?.id !== item.id) return;
-				if (sync.lines.length) player.lines = sync.lines;
-				player.energy = sync.energy;
+				// Lines already known (the audio page, or a draft previewed from the editor) are kept
+				if (player.lines.length === 0) player.lines = sync.lines;
+				if (sync.energy.length) player.energy = sync.energy;
 			})
 			.catch(() => {});
 		return () => controller.abort();

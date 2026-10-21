@@ -60,9 +60,8 @@
 	"theme_eau": "ماء",
 	"text_smaller": "تصغير النص",
 	"text_bigger": "تكبير النص",
-	"toggle_arabic": "إظهار العربية",
-	"toggle_french": "إظهار الفرنسية",
 	"listen": "استمع",
 	"listen_all": "استمع إلى الكل",
-	"now_playing": "قيد التشغيل"
+	"now_playing": "قيد التشغيل",
+	"toggle_language": "إظهار: {language}"
 }
