@@ -78,6 +78,7 @@ MinIO is not used: its open-source repository was archived in April 2026.
 - [x] **3b.3** Download (yt-dlp, Telegram up to 2 GB via a local Bot API server), create the published track/video, skip duplicates. *Done when:* the same link posted twice is added once.
 - [x] **3b.4** "Annuler" button for the sender and group admins; the status message turns to "En ligne" when the worker is done. *Done when:* a mistaken post can be removed from the group.
 - [ ] **3b.5** Set up the bot in Telegram and Coolify (token, group id, API id/hash, Anthropic key). *Done when:* a link posted in the group appears on the site.
+- [ ] **3b.6** Home-PC downloader for YouTube (server addresses are blocked): a small program on an always-on PC fetches pending links from Sakina, downloads them from the home connection and uploads the result. No port to open at home. *Done when:* a YouTube link posted in the group is imported without cookies.
 
 ## Phase 4 — Public site and library
 
