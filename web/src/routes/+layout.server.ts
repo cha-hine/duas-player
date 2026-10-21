@@ -1,3 +1,6 @@
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = ({ locals }) => ({ theme: locals.theme });
+export const load: LayoutServerLoad = ({ locals }) => ({
+	theme: locals.theme,
+	device: locals.device
+});

@@ -61,6 +61,13 @@ Create a **Docker Compose** resource in Coolify pointing at this repo; it uses `
   node scripts\import-folder.ts D:\mes-fichiers --publish  # published directly
   ```
 
+## Smart TV
+
+TV browsers (Samsung Tizen, LG webOS, Android TV / Google TV, Fire TV, Sony, Hisense, Philips…)
+are detected automatically and get the TV mode: larger text, a clearly visible focus, and navigation
+with the remote (arrows move between items, OK opens, Back goes back). Add `?tv=1` to any address to
+force TV mode on another device (`?tv=0` to leave it); the choice is remembered.
+
 ## Telegram bot
 
 Members of the Telegram group post a link (YouTube, Instagram, TikTok, Facebook, direct `.mp3`/`.mp4`)

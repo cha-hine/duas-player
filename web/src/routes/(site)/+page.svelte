@@ -2,7 +2,6 @@
 	import logo from '#lib/assets/favicon.svg';
 	import Seo from '#lib/components/Seo.svelte';
 	import CategoryCard from '#lib/components/media/CategoryCard.svelte';
-	import MediaGrid from '#lib/components/media/MediaGrid.svelte';
 	import SectionTitle from '#lib/components/media/SectionTitle.svelte';
 	import Button from '#lib/components/ui/Button.svelte';
 	import { link } from '#lib/i18n.ts';
@@ -26,13 +25,6 @@
 		<Button href={link('/recherche')} size="lg" variant="secondary">{m.search_label()}</Button>
 	</div>
 </section>
-
-{#if data.latest.length}
-	<section class="container block">
-		<SectionTitle title={m.latest_title()} />
-		<MediaGrid items={data.latest} />
-	</section>
-{/if}
 
 <section class="container block">
 	<SectionTitle title={m.categories_title()} href={link('/bibliotheque')} />

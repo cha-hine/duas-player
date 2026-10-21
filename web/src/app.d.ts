@@ -5,6 +5,7 @@ declare global {
 		// interface Error {}
 		interface Locals {
 			theme: import('#lib/theme.ts').Theme;
+			device: import('#lib/device.ts').Device;
 		}
 		// interface PageData {}
 		// interface PageState {}

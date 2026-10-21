@@ -57,6 +57,12 @@
 		transform: translateY(-2px);
 	}
 
+	/* On TV the selected card stands out clearly */
+	:global([data-device='tv']) .card:focus {
+		border-color: var(--color-accent);
+		transform: scale(1.04);
+	}
+
 	.thumb {
 		position: relative;
 		aspect-ratio: 16 / 9;

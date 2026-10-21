@@ -2,6 +2,8 @@
 	import BottomNav from '#lib/components/layout/BottomNav.svelte';
 	import Footer from '#lib/components/layout/Footer.svelte';
 	import Header from '#lib/components/layout/Header.svelte';
+	import SpatialNavigation from '#lib/components/layout/SpatialNavigation.svelte';
+	import LatestSidebar from '#lib/components/media/LatestSidebar.svelte';
 	import { m } from '#lib/paraglide/messages.js';
 	import type { LayoutProps } from './$types';
 
@@ -12,12 +14,20 @@
 
 <Header theme={data.theme} />
 
-<main id="main">
-	{@render children()}
-</main>
+<div class="shell">
+	<main id="main">
+		{@render children()}
+	</main>
+	{#if data.latest.length}
+		<div class="side">
+			<LatestSidebar items={data.latest} />
+		</div>
+	{/if}
+</div>
 
 <Footer />
-<BottomNav />
+{#if data.device !== 'tv'}<BottomNav />{/if}
+{#if data.device === 'tv'}<SpatialNavigation />{/if}
 
 <style>
 	.skip-link {
@@ -35,5 +45,43 @@
 
 	.skip-link:focus {
 		transform: none;
+	}
+
+	/* Main content first (left in French, right in Arabic), new additions beside it */
+	.shell {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	main {
+		min-width: 0;
+	}
+
+	.side {
+		padding: var(--space-6) var(--gutter);
+		border-top: 1px solid var(--color-border);
+	}
+
+	@media (min-width: 1100px) {
+		.shell {
+			/* In rem, so the column grows with the larger text of TV mode */
+			grid-template-columns: minmax(0, 1fr) clamp(20rem, 26vw, 28rem);
+		}
+
+		.side {
+			position: sticky;
+			top: var(--header-height);
+			align-self: start;
+			max-height: calc(100dvh - var(--header-height));
+			overflow-y: auto;
+			padding-inline: var(--space-4) var(--gutter);
+			border-top: none;
+			border-inline-start: 1px solid var(--color-border);
+		}
+
+		/* The column's own gutter replaces the page gutter on that side */
+		main :global(.container) {
+			padding-inline-end: var(--space-6);
+		}
 	}
 </style>
