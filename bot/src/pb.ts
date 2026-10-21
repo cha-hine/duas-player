@@ -30,6 +30,11 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 	return res.status === 204 ? (undefined as T) : res.json();
 }
 
+/** Throws with a readable message when the service account cannot log in. */
+export async function checkLogin(): Promise<void> {
+	await categories();
+}
+
 const filter = (expr: string) => `filter=${encodeURIComponent(expr)}`;
 const quote = (value: string) => JSON.stringify(value);
 

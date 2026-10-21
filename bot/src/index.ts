@@ -162,6 +162,12 @@ await moveToLocalServer();
 
 const bot = new Bot(config.botToken, { client: { apiRoot: config.apiRoot } });
 
+// Logs every incoming message's chat, to help with setup
+bot.use(async (ctx, next) => {
+	if (ctx.message) log(`message in chat ${ctx.chat?.id} (${ctx.chat?.type})`);
+	await next();
+});
+
 bot.command('id', (ctx) => ctx.reply(`ID de cette discussion : ${ctx.chat.id}`));
 
 bot.on('message', async (ctx) => {
@@ -189,8 +195,31 @@ bot.callbackQuery(/^undo:([tv]):(\w+):(\d+)$/, async (ctx) => {
 
 bot.catch((err) => log(`update failed: ${err.error instanceof Error ? err.error.message : err.error}`));
 
+// Startup diagnostics, so a missing setting shows up clearly in the Coolify logs
+try {
+	const me = await bot.api.getMe();
+	log(`connected to Telegram as @${me.username} via ${config.apiRoot ?? 'api.telegram.org'}`);
+	if (me.can_read_all_group_messages === false) {
+		log('privacy mode is ON: in @BotFather use /setprivacy -> Disable, or links in the group will not be seen');
+	}
+} catch (e) {
+	log(`cannot reach Telegram via ${config.apiRoot ?? 'api.telegram.org'}: ${e instanceof Error ? e.message : e}`);
+	log('check TELEGRAM_BOT_TOKEN, and TELEGRAM_API_ID / TELEGRAM_API_HASH for the telegram-bot-api service');
+	process.exit(1);
+}
+try {
+	await pb.checkLogin();
+	log('connected to PocketBase');
+} catch (e) {
+	log(`PocketBase not ready, imports will fail until fixed: ${e instanceof Error ? e.message : e}`);
+}
 if (config.allowedChats.length === 0) {
 	log('TELEGRAM_ALLOWED_CHATS is empty: send /id in your group and set it, until then all content is ignored');
+} else {
+	log(`accepting content from chats ${config.allowedChats.join(', ')}`);
 }
-log('started');
-await bot.start({ allowed_updates: ['message', 'callback_query'] });
+
+await bot.start({
+	allowed_updates: ['message', 'callback_query'],
+	onStart: () => log('listening for messages')
+});
