@@ -1,14 +1,13 @@
 <script lang="ts">
 	import type { Component } from 'svelte';
+	import Seo from '#lib/components/Seo.svelte';
 	import Tag from '#lib/components/ui/Tag.svelte';
 	import { m } from '#lib/paraglide/messages.js';
 
 	let { title, text, icon: Icon }: { title: string; text: string; icon: Component } = $props();
 </script>
 
-<svelte:head>
-	<title>{title} · {m.site_name()}</title>
-</svelte:head>
+<Seo {title} description={text} />
 
 <section class="container coming-soon">
 	<div class="icon"><Icon aria-hidden="true" /></div>

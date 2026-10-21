@@ -1,60 +1,59 @@
 <script lang="ts">
-	import BookOpen from '@lucide/svelte/icons/book-open';
-	import HandHeart from '@lucide/svelte/icons/hand-heart';
-	import Tv from '@lucide/svelte/icons/tv';
 	import logo from '#lib/assets/favicon.svg';
+	import Seo from '#lib/components/Seo.svelte';
+	import CategoryCard from '#lib/components/media/CategoryCard.svelte';
+	import MediaGrid from '#lib/components/media/MediaGrid.svelte';
+	import SectionTitle from '#lib/components/media/SectionTitle.svelte';
 	import Button from '#lib/components/ui/Button.svelte';
-	import Card from '#lib/components/ui/Card.svelte';
-	import Tag from '#lib/components/ui/Tag.svelte';
 	import { link } from '#lib/i18n.ts';
 	import { m } from '#lib/paraglide/messages.js';
+	import type { PageProps } from './$types';
 
-	const sections = [
-		{ path: '/coran', title: m.nav_quran, text: m.quran_intro, icon: BookOpen },
-		{ path: '/douas', title: m.nav_duas, text: m.duas_intro, icon: HandHeart },
-		{ path: '/tv', title: m.nav_tv, text: m.tv_intro, icon: Tv }
-	];
+	let { data }: PageProps = $props();
 </script>
 
-<svelte:head>
-	<title>{m.site_name()} · {m.site_tagline()}</title>
-</svelte:head>
+<Seo title="" />
 
 <section class="hero container">
-	<img src={logo} alt="" width="96" height="96" />
+	<img src={logo} alt="" width="80" height="80" />
 	<h1>
 		Sakina <span lang="ar" dir="rtl">سكينة</span>
 	</h1>
 	<p class="tagline">{m.site_tagline()}</p>
 	<p class="description">{m.site_description()}</p>
 	<div class="cta">
-		<Button href={link('/coran')} size="lg">{m.nav_quran()}</Button>
-		<Button href={link('/douas')} size="lg" variant="secondary">{m.nav_duas()}</Button>
+		<Button href={link('/bibliotheque')} size="lg">{m.nav_library()}</Button>
+		<Button href={link('/recherche')} size="lg" variant="secondary">{m.search_label()}</Button>
 	</div>
 </section>
 
-<section class="container sections">
-	{#each sections as section (section.path)}
-		<Card href={link(section.path)}>
-			<div class="card-icon"><section.icon aria-hidden="true" /></div>
-			<h2>{section.title()}</h2>
-			<p>{section.text()}</p>
-			<Tag>{m.coming_soon()}</Tag>
-		</Card>
-	{/each}
+{#if data.latest.length}
+	<section class="container block">
+		<SectionTitle title={m.latest_title()} />
+		<MediaGrid items={data.latest} />
+	</section>
+{/if}
+
+<section class="container block">
+	<SectionTitle title={m.categories_title()} href={link('/bibliotheque')} />
+	<div class="categories">
+		{#each data.categories as category (category.id)}
+			<CategoryCard {category} count={data.counts[category.id] ?? 0} />
+		{/each}
+	</div>
 </section>
 
 <style>
 	.hero {
 		display: grid;
 		justify-items: center;
-		gap: var(--space-4);
-		padding-block: var(--space-8) var(--space-7);
+		gap: var(--space-3);
+		padding-block: var(--space-7) var(--space-6);
 		text-align: center;
 	}
 
 	.hero img {
-		border-radius: 22px;
+		border-radius: 20px;
 		box-shadow: var(--shadow-md);
 	}
 
@@ -84,39 +83,16 @@
 		flex-wrap: wrap;
 		justify-content: center;
 		gap: var(--space-3);
-		margin-top: var(--space-4);
+		margin-top: var(--space-3);
 	}
 
-	.sections {
+	.block {
+		padding-block: var(--space-6);
+	}
+
+	.categories {
 		display: grid;
-		gap: var(--space-4);
-	}
-
-	@media (min-width: 768px) {
-		.sections {
-			grid-template-columns: repeat(3, 1fr);
-		}
-	}
-
-	.card-icon {
-		color: var(--color-accent-text);
-	}
-
-	.card-icon :global(svg) {
-		width: 28px;
-		height: 28px;
-	}
-
-	h2 {
-		font-size: var(--text-xl);
-	}
-
-	.sections p {
-		color: var(--color-text-muted);
-		flex: 1;
-	}
-
-	.sections :global(.tag) {
-		align-self: flex-start;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+		gap: var(--space-3);
 	}
 </style>

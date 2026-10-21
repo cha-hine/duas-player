@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Search from '@lucide/svelte/icons/search';
 	import { page } from '$app/state';
 	import logo from '#lib/assets/favicon.svg';
 	import { link } from '#lib/i18n.ts';
@@ -23,13 +24,21 @@
 
 		<nav class="nav" aria-label={m.main_nav()}>
 			{#each navItems as item (item.path)}
-				<a href={link(item.path)} aria-current={isActive(item.path, current) ? 'page' : undefined}>
+				<a href={link(item.path)} aria-current={isActive(item, current) ? 'page' : undefined}>
 					{item.label()}
 				</a>
 			{/each}
 		</nav>
 
 		<div class="actions">
+			<a
+				class="search"
+				href={link('/recherche')}
+				aria-label={m.search_label()}
+				title={m.search_label()}
+			>
+				<Search aria-hidden="true" />
+			</a>
 			<LanguageSwitch />
 			<ThemeToggle {theme} />
 		</div>
@@ -95,6 +104,24 @@
 		align-items: center;
 		gap: var(--space-1);
 		margin-inline-start: auto;
+	}
+
+	.search {
+		display: inline-grid;
+		place-items: center;
+		width: 44px;
+		height: 44px;
+		border-radius: var(--radius-pill);
+		color: var(--color-text);
+	}
+
+	.search:hover {
+		background: var(--color-surface-2);
+	}
+
+	.search :global(svg) {
+		width: 22px;
+		height: 22px;
 	}
 
 	@media (min-width: 768px) {

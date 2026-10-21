@@ -82,12 +82,12 @@ MinIO is not used: its open-source repository was archived in April 2026.
 
 ## Phase 4 — Public site and library
 
-- [ ] **4.1** Home page: featured content, categories, latest additions. *Done when:* it shows real content from PocketBase.
-- [ ] **4.2** Category page with a list of tracks and videos. *Done when:* each category lists its items.
-- [ ] **4.3** Track page (title, reciter, play button). *Done when:* each track has its own shareable URL.
-- [ ] **4.4** Reciter page. *Done when:* it lists all tracks by that reciter.
-- [ ] **4.5** Search in Arabic and French (ignoring diacritics). *Done when:* searching "دعاء" or "invocation" finds results.
-- [ ] **4.6** Page titles, descriptions and social previews. *Done when:* a shared link shows the title and image.
+- [x] **4.1** Home page: featured content, categories, latest additions. *Done when:* it shows real content from PocketBase.
+- [x] **4.2** Category page with a list of tracks and videos. *Done when:* each category lists its items.
+- [x] **4.3** Track page (title, reciter, play button). *Done when:* each track has its own shareable URL.
+- [x] **4.4** Reciter page. *Done when:* it lists all tracks by that reciter.
+- [x] **4.5** Search in Arabic and French (ignoring diacritics). *Done when:* searching "دعاء" or "invocation" finds results.
+- [x] **4.6** Page titles, descriptions and social previews. *Done when:* a shared link shows the title and image.
 
 ## Phase 5 — Sakina player (core)
 

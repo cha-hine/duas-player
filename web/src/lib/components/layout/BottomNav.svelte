@@ -11,7 +11,7 @@
 <!-- Phone navigation; the header nav takes over from 768px. -->
 <nav class="bottom-nav" aria-label={m.main_nav()}>
 	{#each navItems as item (item.path)}
-		<a href={link(item.path)} aria-current={isActive(item.path, current) ? 'page' : undefined}>
+		<a href={link(item.path)} aria-current={isActive(item, current) ? 'page' : undefined}>
 			<item.icon aria-hidden="true" />
 			<span>{item.label()}</span>
 		</a>

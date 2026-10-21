@@ -7,6 +7,9 @@ import type { Category } from './pb.ts';
 
 const client = new Anthropic();
 
+/** Values of the `language` select in PocketBase (pb_migrations/1761300000_language_search.js). */
+export const LANGUAGES = ['ar', 'fa', 'ur', 'en', 'fr', 'tr', 'az', 'other'];
+
 // Descriptions can be very long (playlists of links, lyrics); the start is enough to classify.
 const DESCRIPTION_CHARS = 3000;
 
@@ -18,6 +21,7 @@ export type Classification = {
 	title_ar: string;
 	reciter_fr: string | null;
 	reciter_ar: string | null;
+	language: string;
 };
 
 function systemPrompt(categories: Category[]): string {
@@ -29,8 +33,9 @@ Members of a Telegram group send links or files. From the metadata you receive, 
 1. relevant: true when the content is Islamic devotional or educational material that fits one of the categories below. False for anything else: music or entertainment, advertising, spam, politics, unrelated videos, or content hostile toward the Ahl al-Bayt. When false, explain why in "reason" in one short French sentence; the sender will read it.
 2. category: the best-fitting slug from this list.
 ${list}
-3. title_fr and title_ar: a short clean title for the website, without channel names, emojis, hashtags, quality tags like "HD", or decorative punctuation. In French, use the usual transliterations (Doua Kumayl, Ziyarat Achoura, Latmiya). In Arabic, write the title in Arabic script. Keep the reciter's name out of the title.
+3. title_fr and title_ar: a short clean title for the website, without channel names, emojis, hashtags, quality tags like "HD", or decorative punctuation. In French, use the usual transliterations (Doua Kumayl, Ziyarat Achoura, Latmiya). title_ar is in Arabic script: in Arabic, or in the original Persian or Urdu wording when the content is in that language. Keep the reciter's name out of the title.
 4. reciter_fr and reciter_ar: the reciter, radood or speaker when the metadata names one clearly, otherwise null.
+5. language: the language that is recited, sung or spoken, as one of ${LANGUAGES.join(', ')} (use "other" when none fits).
 
 When relevant is true, "reason" is a few words on why you chose the category.
 
@@ -48,7 +53,8 @@ export async function classify(categories: Category[], meta: Metadata, message: 
 		title_fr: z.string(),
 		title_ar: z.string(),
 		reciter_fr: z.string().nullable(),
-		reciter_ar: z.string().nullable()
+		reciter_ar: z.string().nullable(),
+		language: z.string().describe(`One of: ${LANGUAGES.join(', ')}`)
 	});
 
 	const data = {
@@ -73,5 +79,5 @@ export async function classify(categories: Category[], meta: Metadata, message: 
 	const result = response.parsed_output;
 	if (response.stop_reason === 'refusal' || !result) return null;
 	if (result.relevant && !slugs.includes(result.category)) return null;
-	return result;
+	return { ...result, language: LANGUAGES.includes(result.language) ? result.language : 'other' };
 }

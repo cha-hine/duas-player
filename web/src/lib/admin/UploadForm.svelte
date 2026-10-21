@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { RecordModel } from 'pocketbase';
 	import Button from '#lib/components/ui/Button.svelte';
+	import { LANGUAGES } from '#lib/languages.ts';
 	import { UPLOAD_TARGETS, type UploadCollection } from '#lib/upload-protocol.ts';
 	import { UploadFailed, uploadFile, type Progress } from '#lib/uploader.ts';
 	import { pb, slugify } from './pb.ts';
@@ -14,6 +15,7 @@
 	let category = $state('');
 	let reciter = $state('');
 	let published = $state(false);
+	let language = $state('ar');
 	let files = $state<FileList>();
 
 	let categories = $state<RecordModel[]>([]);
@@ -61,6 +63,7 @@
 						category,
 						reciter,
 						published,
+						language,
 						status: 'pending'
 					}
 				},
@@ -164,6 +167,15 @@
 			</select>
 		</label>
 	</div>
+
+	<label class="field">
+		<span>Langue</span>
+		<select class="input" bind:value={language}>
+			{#each Object.entries(LANGUAGES) as [code, label] (code)}
+				<option value={code}>{label.fr} · {label.native}</option>
+			{/each}
+		</select>
+	</label>
 
 	<label class="check">
 		<input type="checkbox" bind:checked={published} />

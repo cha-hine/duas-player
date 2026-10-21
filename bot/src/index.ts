@@ -117,6 +117,7 @@ async function importSource({ api, msg, source }: Job) {
 				slug,
 				category: category.id,
 				reciter,
+				language: result.language,
 				published: true,
 				status: 'pending',
 				origin_url: meta.origin,

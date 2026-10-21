@@ -6,19 +6,21 @@
 onRecordCreate(
 	(e) => {
 		if (!e.record.getString('status')) e.record.set('status', 'pending');
+		e.record.set('search', require(`${__hooks}/search.js`).searchText(e.app, e.record));
 		e.next();
 	},
 	'tracks',
 	'videos'
 );
 
-// A replaced audio/video file needs processing again
 onRecordUpdate(
 	(e) => {
+		// A replaced audio/video file needs processing again
 		const field = e.record.collection().name === 'tracks' ? 'audio' : 'source';
 		if (e.record.getString(field) !== e.record.original().getString(field)) {
 			e.record.set('status', 'pending');
 		}
+		e.record.set('search', require(`${__hooks}/search.js`).searchText(e.app, e.record));
 		e.next();
 	},
 	'tracks',
