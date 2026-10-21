@@ -3,6 +3,7 @@
 import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import Anthropic from '@anthropic-ai/sdk';
 import { Bot, InlineKeyboard, type Api } from 'grammy';
 import type { Message } from 'grammy/types';
 import { classify } from './classify.ts';
@@ -57,6 +58,8 @@ async function importSource({ api, msg, source }: Job) {
 		await api.editMessageText(chatId, statusId, text, { reply_markup: keyboard }).catch(() => {});
 	};
 
+	// Named in the group message when something fails
+	let stage = 'lecture du lien';
 	const workDir = await mkdtemp(join(config.dataDir, 'job-'));
 	try {
 		const caption = msg.text ?? msg.caption ?? '';
@@ -64,6 +67,7 @@ async function importSource({ api, msg, source }: Job) {
 		const meta = source.kind === 'url' ? await probeUrl(source.url) : telegramMetadata(source, caption);
 		if (source.kind === 'url') await say('⏳ Reçu, je regarde…');
 
+		stage = 'connexion au site';
 		const existing = await pb.findByOrigin(meta.origin);
 		if (existing) {
 			await say(`ℹ️ Déjà sur Sakina : ${existing.record.title_fr}`);
@@ -75,6 +79,7 @@ async function importSource({ api, msg, source }: Job) {
 		const collection: pb.Collection = asAudio ? 'tracks' : 'videos';
 
 		const categories = await pb.categories();
+		stage = 'classification par Claude';
 		const result = await classify(categories, { ...meta, hasVideo: !asAudio }, caption);
 		if (!result) {
 			await say("⚠️ Je n'ai pas pu classer ce contenu. Ajoutez-le depuis la page admin.");
@@ -88,9 +93,11 @@ async function importSource({ api, msg, source }: Job) {
 		if (!category) throw new Error(`Unknown category ${result.category}`);
 
 		await say(`⬇️ Téléchargement : ${result.title_fr}`);
+		stage = 'téléchargement';
 		const file =
 			source.kind === 'url' ? await downloadUrl(source.url, asAudio, workDir) : await downloadTelegram(api, source, workDir);
 
+		stage = 'ajout au site';
 		const reciterName = result.reciter_fr || result.reciter_ar;
 		const reciter = reciterName
 			? await pb.reciterId(result.reciter_fr, result.reciter_ar, slugify(reciterName) || 'recitant')
@@ -129,12 +136,26 @@ async function importSource({ api, msg, source }: Job) {
 			log(`ignored link without media: ${source.kind === 'url' ? source.url : ''}`);
 			return;
 		}
-		const reason = e instanceof UserError ? e.message : 'erreur inattendue';
-		log(`failed: ${e instanceof Error ? e.stack : e}`);
-		await say(`⚠️ Échec : ${reason}`);
+		log(`failed during ${stage}: ${e instanceof Error ? e.stack : e}`);
+		await say(e instanceof UserError ? `⚠️ Échec : ${e.message}` : `⚠️ Échec (${stage}) : ${describe(e)}`);
 	} finally {
 		await rm(workDir, { recursive: true, force: true });
 	}
+}
+
+/** Short French explanation of an unexpected error, for the group message. */
+function describe(e: unknown): string {
+	if (e instanceof Anthropic.AuthenticationError) return 'clé API Anthropic invalide ou manquante (ANTHROPIC_API_KEY)';
+	if (e instanceof Anthropic.PermissionDeniedError) return "la clé API Anthropic n'a pas accès à ce modèle";
+	if (e instanceof Anthropic.RateLimitError) return 'trop de demandes à Claude, réessayez dans une minute';
+	if (e instanceof Anthropic.APIError) return `Claude indisponible (${e.status ?? 'réseau'}) : ${e.message.slice(0, 150)}`;
+	const message = e instanceof Error ? e.message : String(e);
+	if (message.includes('Could not resolve authentication')) return 'clé API Anthropic manquante (ANTHROPIC_API_KEY)';
+	if (message.includes('PocketBase login failed')) {
+		return 'connexion à PocketBase refusée (vérifiez PB_WORKER_EMAIL / PB_WORKER_PASSWORD)';
+	}
+	if (/ECONNREFUSED|fetch failed/.test(message)) return 'service injoignable (PocketBase ou Telegram)';
+	return message.slice(0, 200);
 }
 
 /** Updates the group message once the worker has finished (or failed). */
