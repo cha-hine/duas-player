@@ -95,5 +95,7 @@
 	"text_reset": "Par défaut",
 	"text_font": "Police : {language}",
 	"text_smaller_lang": "Réduire : {language}",
-	"text_bigger_lang": "Agrandir : {language}"
+	"text_bigger_lang": "Agrandir : {language}",
+	"text_translation": "Traduction : {language}",
+	"text_translation_default": "Traduction par défaut"
 }

@@ -1,11 +1,10 @@
 <script lang="ts">
-	import type { Path } from '$app/types';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { resolvePath } from '#lib/i18n.ts';
 	import { getLocale, localizeHref } from '#lib/paraglide/runtime.js';
 
 	const other = $derived(getLocale() === 'fr' ? 'ar' : 'fr');
-	const href = $derived(resolve(localizeHref(page.url.pathname, { locale: other }) as Path));
+	const href = $derived(resolvePath(localizeHref(page.url.pathname, { locale: other })));
 </script>
 
 <!-- Full reload so the server sets the page language and direction. -->

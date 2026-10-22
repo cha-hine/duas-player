@@ -18,6 +18,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { arabicNumber, recitationSlug, verseMark } from '#lib/quran.ts';
+	import { translations } from '#lib/translations.svelte.ts';
 	import { isSynced, lineLanguages, TEXT_LANGUAGES } from '#lib/text-languages.ts';
 	import type { PageProps } from './$types';
 
@@ -33,6 +34,11 @@
 	let follow = $state(true);
 
 	const recitation = $derived(surah.recitations.find((r) => r.id === recitationId) ?? null);
+	// The translation the listener chose, for this surah
+	$effect(() => {
+		void translations.load(surah.number);
+	});
+
 	/** Timings of the chosen recitation, loaded on demand (the list comes without them). */
 	let timings = $state<Line[]>([]);
 	const synced = $derived(isSynced(timings));
@@ -310,7 +316,7 @@
 								style:--scale={settings.scale(code)}
 							>
 								<span class="n">{n}.</span>
-								{verse[code]}
+								{translations.text(verse, code, surah.number)}
 							</p>
 						{/if}
 					{/if}

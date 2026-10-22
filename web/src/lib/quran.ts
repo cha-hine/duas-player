@@ -35,3 +35,12 @@ export function neighbourRecitation(slug: string, step: 1 | -1): string | null {
 	if (!parsed || number < 1 || number > 114) return null;
 	return `sourate-${String(number).padStart(3, '0')}${parsed.variant}`;
 }
+
+/**
+ * The surah a track recites, for the translation the listener chose; null for other tracks
+ * and for recited translations (their own text is what is heard).
+ */
+export function surahOfTrack(slug: string): number | null {
+	const parsed = recitationSlug(slug);
+	return parsed && !parsed.variant.includes('-translation-') ? parsed.number : null;
+}

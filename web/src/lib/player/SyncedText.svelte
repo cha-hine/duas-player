@@ -7,7 +7,8 @@
 		TEXT_LANGUAGES,
 		type TextLanguage
 	} from '#lib/text-languages.ts';
-	import { verseMark } from '#lib/quran.ts';
+	import { surahOfTrack, verseMark } from '#lib/quran.ts';
+	import { translations } from '#lib/translations.svelte.ts';
 	import { player } from './player.svelte.ts';
 	import { settings } from './settings.svelte.ts';
 	import { energyAt, lineAt } from './sync.ts';
@@ -50,6 +51,14 @@
 	const line = $derived(index >= 0 ? player.lines[index] : null);
 	const next = $derived(line ? (player.lines[index + 1] ?? null) : null);
 	const item = $derived(player.current);
+	/** The surah recited, for the translation the listener chose. */
+	const surah = $derived(item ? surahOfTrack(item.slug) : null);
+	const say = (from: typeof line, code: TextLanguage) =>
+		from ? (translations.text(from, code, surah) ?? '') : '';
+
+	$effect(() => {
+		if (surah) void translations.load(surah);
+	});
 
 	const words = (text: string) => text.trim().split(/\s+/);
 
@@ -122,7 +131,7 @@
 	{#key line ? index : -1}
 		<div class="slide" data-line={line ? index : -1} out:fade={{ duration: OUT_MS }}>
 			{#if line}
-				{#each languages.filter((code) => line[code]?.trim()) as code, row (code)}
+				{#each languages.filter((code) => say(line, code).trim()) as code, row (code)}
 					{@const lang = TEXT_LANGUAGES[code]}
 					{@const look = textStyle(code)}
 					<p
@@ -135,7 +144,7 @@
 						style:--scale={look.scale}
 						style:--row={row}
 					>
-						{#each words(line[code] ?? '') as word, i (i)}
+						{#each words(say(line, code)) as word, i (i)}
 							<span class="word" style:--i={i}>{word}</span>
 						{/each}
 						{#if code === 'ar' && line.n}
@@ -177,7 +186,7 @@
 				style:font-family={settings.font(languages[0]).family}
 				style:--scale={settings.scale(languages[0])}
 			>
-				{next[languages[0]] ?? ''}
+				{say(next, languages[0])}
 			</p>
 		{/key}
 	{/if}

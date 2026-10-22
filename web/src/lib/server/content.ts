@@ -279,3 +279,43 @@ export async function surah(number: number) {
 		recitations
 	};
 }
+
+// ——— Quran translations to choose from (one record per translator and surah) ———
+
+export type Translator = { id: string; name: string };
+export type SurahTranslation = { basmala?: string; verses: string[] };
+
+const translatorCache = new Map<string, { at: number; list: Translator[] }>();
+
+/** Translators of a language, by name (cached like the Quran index). */
+export async function translators(language: string): Promise<Translator[]> {
+	const cached = translatorCache.get(language);
+	if (cached && Date.now() - cached.at < QURAN_CACHE_MS) return cached.list;
+	const pb = client();
+	const rows = await pb.collection('translations').getFullList({
+		filter: pb.filter('language = {:language} && surah = 1', { language }),
+		sort: 'translator_name',
+		fields: 'translator,translator_name'
+	});
+	const list = rows.map((r) => ({ id: r.translator as string, name: r.translator_name as string }));
+	translatorCache.set(language, { at: Date.now(), list });
+	return list;
+}
+
+/** One surah in one translation, or null. */
+export async function surahTranslation(
+	language: string,
+	translator: string,
+	surah: number
+): Promise<SurahTranslation | null> {
+	const pb = client();
+	const found = await pb.collection('translations').getList(1, 1, {
+		filter: pb.filter('language = {:language} && translator = {:translator} && surah = {:surah}', {
+			language,
+			translator,
+			surah
+		}),
+		fields: 'text'
+	});
+	return (found.items[0]?.text as SurahTranslation | undefined) ?? null;
+}

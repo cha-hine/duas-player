@@ -15,7 +15,8 @@
 	import { player } from '#lib/player/player.svelte.ts';
 	import { settings } from '#lib/player/settings.svelte.ts';
 	import { lineAt } from '#lib/player/sync.ts';
-	import { verseMark } from '#lib/quran.ts';
+	import { surahOfTrack, verseMark } from '#lib/quran.ts';
+	import { translations } from '#lib/translations.svelte.ts';
 	import { isSynced, lineLanguages, TEXT_LANGUAGES } from '#lib/text-languages.ts';
 	import AudioPlayer from './AudioPlayer.svelte';
 	import MediaGrid from './MediaGrid.svelte';
@@ -26,6 +27,11 @@
 
 	const description = $derived(localized(item.description_fr, item.description_ar));
 	const languages = $derived(lineLanguages(item.lines));
+	/** The surah a recitation recites, for the translation the listener chose. */
+	const surah = $derived(surahOfTrack(item.slug));
+	$effect(() => {
+		if (surah) void translations.load(surah);
+	});
 	// Highlights the line being recited when this track is the one playing
 	const currentLine = $derived(
 		player.isCurrent(item) && isSynced(item.lines)
@@ -84,7 +90,8 @@
 					onclick={() => player.playFrom([item, ...related], item, line.start)}
 				>
 					{#each languages as code (code)}
-						{#if line[code]}
+						{@const text = translations.text(line, code, surah)}
+						{#if text}
 							<span
 								class="text"
 								class:ar={code === 'ar'}
@@ -92,7 +99,7 @@
 								dir={TEXT_LANGUAGES[code].dir}
 								style:font-family={settings.font(code).family}
 								style:--scale={settings.scale(code)}
-								>{line[code]}{#if code === 'ar' && line.n}
+								>{text}{#if code === 'ar' && line.n}
 									<span class="mark">{verseMark(line.n)}</span>{/if}</span
 							>
 						{/if}

@@ -7,6 +7,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { settings, SIZE_MAX, SIZE_MIN } from '#lib/player/settings.svelte.ts';
 	import { TEXT_FONTS } from '#lib/text-fonts.ts';
+	import { translations, TRANSLATED } from '#lib/translations.svelte.ts';
 	import { TEXT_LANGUAGES, type TextLanguage } from '#lib/text-languages.ts';
 
 	// Gear button opening a small floating panel: font and size of each language's text.
@@ -54,6 +55,8 @@
 
 	$effect(() => {
 		if (!open || !panel) return;
+		// The translators to choose from, fetched the first time the panel opens
+		for (const code of languages) if (TRANSLATED.includes(code)) void translations.list(code);
 		place();
 		panel.querySelector<HTMLElement>('select, button')?.focus();
 		const outside = (event: PointerEvent) => {
@@ -150,6 +153,19 @@
 							onclick={() => settings.resize(code, 1)}><Plus /></button
 						>
 					</div>
+					{#if translations.lists[code]?.length}
+						<select
+							class="translator"
+							value={settings.translators[code] ?? ''}
+							aria-label={m.text_translation({ language })}
+							onchange={(e) => settings.setTranslator(code, e.currentTarget.value)}
+						>
+							<option value="">{m.text_translation_default()}</option>
+							{#each translations.lists[code] ?? [] as translator (translator.id)}
+								<option value={translator.id}>{translator.name}</option>
+							{/each}
+						</select>
+					{/if}
 				</div>
 			{/each}
 			{@render children?.()}
@@ -236,6 +252,11 @@
 	select option {
 		background: var(--panel-bg, var(--color-surface));
 		color: var(--color-text);
+	}
+
+	/* Which translation, under the language's font and size */
+	.translator {
+		grid-column: 2 / -1;
 	}
 
 	.font {

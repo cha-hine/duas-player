@@ -21,6 +21,7 @@ type Saved = {
 	hidden: TextLanguage[];
 	fonts: Partial<Record<TextLanguage, string>>;
 	sizes: Partial<Record<TextLanguage, number>>;
+	translators: Partial<Record<TextLanguage, string>>;
 	// Older saved settings: one size for every language, Arabic and French on or off
 	textScale?: number;
 	showArabic?: boolean;
@@ -42,6 +43,8 @@ class PlayerSettings {
 	fonts = $state<Partial<Record<TextLanguage, string>>>({});
 	/** Text size per language, 1 = default. */
 	sizes = $state<Partial<Record<TextLanguage, number>>>({});
+	/** Quran translation chosen per language (id in the translations collection). */
+	translators = $state<Partial<Record<TextLanguage, string>>>({});
 
 	/** Reads saved preferences (browser only; storage may be unavailable). */
 	load() {
@@ -63,6 +66,9 @@ class PlayerSettings {
 			for (const [code, size] of Object.entries(saved.sizes ?? {})) {
 				if (isLanguage(code) && typeof size === 'number') this.sizes[code] = clampSize(size);
 			}
+			for (const [code, id] of Object.entries(saved.translators ?? {})) {
+				if (isLanguage(code) && typeof id === 'string') this.translators[code] = id;
+			}
 			// The former single size applies to every language
 			if (!saved.sizes && typeof saved.textScale === 'number') {
 				for (const code of TEXT_LANGUAGE_CODES) this.sizes[code] = clampSize(saved.textScale);
@@ -78,7 +84,8 @@ class PlayerSettings {
 				theme: this.theme,
 				hidden: this.hidden,
 				fonts: this.fonts,
-				sizes: this.sizes
+				sizes: this.sizes,
+				translators: this.translators
 			};
 			localStorage.setItem(KEY, JSON.stringify(value));
 		} catch {
@@ -111,10 +118,16 @@ class PlayerSettings {
 		this.save();
 	}
 
-	/** Back to the site's fonts and sizes. */
+	setTranslator(code: TextLanguage, id: string) {
+		this.translators = { ...this.translators, [code]: id };
+		this.save();
+	}
+
+	/** Back to the site's fonts, sizes and translations. */
 	resetText() {
 		this.fonts = {};
 		this.sizes = {};
+		this.translators = {};
 		this.save();
 	}
 
