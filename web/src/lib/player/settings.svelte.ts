@@ -3,7 +3,17 @@ import { TEXT_FONTS, type TextFont } from '#lib/text-fonts.ts';
 import { TEXT_LANGUAGE_CODES, type TextLanguage } from '#lib/text-languages.ts';
 
 /** Animated (WebGL) skies first, then the calm landscapes, light enough for TVs. */
-export const THEMES = ['aube', 'nuit', 'montagnes', 'mer', 'dunes'] as const;
+export const THEMES = [
+	'aube',
+	'nuit',
+	'montagnes',
+	'mer',
+	'dunes',
+	'neige',
+	'foret',
+	'cascade',
+	'lanternes'
+] as const;
 export type Theme = (typeof THEMES)[number];
 
 /** On a TV, unless the listener chose otherwise: a landscape, which costs the chip nothing. */

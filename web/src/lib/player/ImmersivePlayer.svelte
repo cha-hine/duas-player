@@ -26,7 +26,11 @@
 		nuit: m.theme_nuit,
 		montagnes: m.theme_montagnes,
 		mer: m.theme_mer,
-		dunes: m.theme_dunes
+		dunes: m.theme_dunes,
+		neige: m.theme_neige,
+		foret: m.theme_foret,
+		cascade: m.theme_cascade,
+		lanternes: m.theme_lanternes
 	};
 	const REPEAT_LABELS = {
 		off: m.player_repeat_off,
@@ -317,6 +321,7 @@
 
 	.themes div {
 		display: flex;
+		flex-wrap: wrap;
 		gap: var(--space-2);
 	}
 
@@ -364,6 +369,32 @@
 		background:
 			radial-gradient(circle at 68% 30%, #f4efe3 0 3px, transparent 4px),
 			linear-gradient(transparent 58%, #173451 59%), linear-gradient(#081526, #22405c);
+	}
+
+	.neige {
+		background:
+			linear-gradient(170deg, transparent 50%, rgb(80 255 170 / 0.45) 52%, transparent 62%),
+			linear-gradient(20deg, #cad6e6 0 22%, transparent 23%), linear-gradient(#06101f, #1b3350);
+	}
+
+	.foret {
+		background:
+			linear-gradient(90deg, #081615 0 18%, transparent 19% 70%, #081615 71% 82%, transparent 83%),
+			radial-gradient(circle at 60% 40%, #f1ffb0 0 2px, transparent 3px),
+			linear-gradient(#050d14, #12302c);
+	}
+
+	.cascade {
+		background:
+			linear-gradient(90deg, transparent 30%, #e8f6ff 31% 42%, transparent 43%),
+			linear-gradient(#183b52, #3e7a6e);
+	}
+
+	.lanternes {
+		background:
+			radial-gradient(circle at 35% 40%, #ffb35a 0 3px, transparent 4px),
+			radial-gradient(circle at 65% 62%, #ffb35a 0 2px, transparent 3px),
+			linear-gradient(#141a3a, #4a3355);
 	}
 
 	.dunes {

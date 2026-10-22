@@ -4,6 +4,7 @@
 </script>
 
 <script lang="ts">
+	import { particles, pines, stars } from './scenery.ts';
 	import SkyLife from './SkyLife.svelte';
 
 	// Calm landscapes for the immersive player. The scenery frames the screen (sides and
@@ -28,55 +29,6 @@
 		frame = requestAnimationFrame(tick);
 		return () => cancelAnimationFrame(frame);
 	});
-
-	/** The same "random" scenery every time. */
-	function seeded(seed: number) {
-		return () => {
-			seed = (seed * 16807) % 2147483647;
-			return (seed - 1) / 2147483646;
-		};
-	}
-
-	/** Stars around the edges of the sky (none in the middle, where the text is). */
-	function stars(seed: number, count: number): [number, number, number][] {
-		const rand = seeded(seed);
-		const out: [number, number, number][] = [];
-		while (out.length < count) {
-			const x = rand() * 1600;
-			const y = rand() * 620;
-			if (x > 360 && x < 1240 && y > 110) continue;
-			out.push([x, y, 0.6 + rand() * 1.5]);
-		}
-		return out;
-	}
-
-	/** Pine trees standing on a slope, as one path (side scenery, 500 × 700). */
-	function pines(seed: number, from: number, to: number, baseAt: (x: number) => number) {
-		const rand = seeded(seed);
-		let d = '';
-		for (let x = from; x < to; x += 16 + rand() * 26) {
-			const base = baseAt(x) + rand() * 8;
-			const h = 50 + rand() * 70;
-			const w = h * 0.3;
-			d += `M${x.toFixed(0)} ${base.toFixed(0)}l${w.toFixed(0)} ${(-h).toFixed(0)}l${w.toFixed(0)} ${h.toFixed(0)}z`;
-		}
-		return d;
-	}
-
-	/** Moving things along the left and right edges, each with its own rhythm. */
-	function particles(seed: number, count: number) {
-		const rand = seeded(seed);
-		return Array.from({ length: count }, (_, i) => ({
-			x: i % 2 === 0 ? 1 + rand() * 20 : 79 + rand() * 20,
-			y: rand() * 100,
-			duration: 9 + rand() * 9,
-			delay: -rand() * 18,
-			sway: 2 + rand() * 3,
-			drift: 20 + rand() * 50,
-			size: 14 + rand() * 14,
-			hue: i % 3
-		}));
-	}
 
 	const LEAF_COLOURS = ['#c9a24b', '#b8642f', '#8f3b2b'];
 	const leaves = particles(21, 24);

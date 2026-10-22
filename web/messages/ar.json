@@ -97,5 +97,9 @@
 	"text_smaller_lang": "تصغير: {language}",
 	"text_bigger_lang": "تكبير: {language}",
 	"text_translation": "الترجمة: {language}",
-	"text_translation_default": "الترجمة الافتراضية"
+	"text_translation_default": "الترجمة الافتراضية",
+	"theme_neige": "ثلج",
+	"theme_foret": "غابة",
+	"theme_cascade": "شلال",
+	"theme_lanternes": "فوانيس"
 }
