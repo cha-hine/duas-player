@@ -134,7 +134,7 @@ const token: string = (await auth.json()).token;
 async function call(url: string, init: RequestInit = {}) {
 	for (let attempt = 1; ; attempt++) {
 		const res = await fetch(url, { ...init, headers: { Authorization: token, ...init.headers } });
-		if (res.ok) return res.json();
+		if (res.ok) return res.status === 204 ? null : res.json();
 		const text = await res.text();
 		if (attempt >= 5 || res.status < 500) throw new Error(`${init.method ?? 'GET'} ${url} -> ${res.status} ${text}`);
 		await new Promise((r) => setTimeout(r, 5000 * attempt));
@@ -322,7 +322,10 @@ for (const rec of chosen) {
 	for (const sura of surahList) {
 		const slug = slugOf(rec, sura);
 		try {
-			if (await first('tracks', `slug="${slug}"`, 'id')) continue;
+			const existing = await first('tracks', `slug="${slug}"`, 'id,text');
+			if (existing?.text) continue;
+			// Stopped between the upload and its timings last time: done again
+			if (existing) await call(`${API}/api/collections/tracks/records/${existing.id}`, { method: 'DELETE' });
 			if (!(await importSurah(rec, reciter, sura, slug))) skipped.push(slug);
 		} catch (e) {
 			// One surah failing (network, server) does not stop the import; a new run retries it
