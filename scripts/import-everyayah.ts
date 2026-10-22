@@ -17,7 +17,8 @@ const SITE = process.env.SAKINA_SITE ?? 'https://sakina.toophan.net';
 const EMAIL = process.env.SAKINA_EMAIL;
 const PASSWORD = process.env.SAKINA_PASSWORD;
 const DATA = 'https://everyayah.com/data';
-const CHUNK = 32 * 1024 * 1024;
+/** Small enough to pass within Cloudflare's 100 s per request on a slow upload. */
+const CHUNK = 8 * 1024 * 1024;
 const PARALLEL = 6;
 /** Surahs recited without a basmala line before them: Al-Fatiha (it is verse 1) and At-Tawba. */
 const NO_BASMALA = new Set([1, 9]);
