@@ -12,7 +12,12 @@ export const THEMES = [
 	'neige',
 	'foret',
 	'cascade',
-	'lanternes'
+	'lanternes',
+	'kaaba',
+	'medine',
+	'karbala',
+	'najaf',
+	'mashhad'
 ] as const;
 export type Theme = (typeof THEMES)[number];
 
