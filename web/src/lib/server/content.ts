@@ -97,10 +97,14 @@ async function listItems(filter: string, params: Record<string, unknown> = {}, l
 }
 
 /** Recitations imported in bulk (scripts/import-everyayah.ts), left out of "latest additions". */
-const BULK = 'EveryAyah';
+const BULK = ['EveryAyah', 'Le-Coran.com'];
 
 export const latest = (limit: number) =>
-	listItems('submitted_by != {:bulk}', { bulk: BULK }, limit);
+	listItems(
+		BULK.map((_, i) => `submitted_by != {:bulk${i}}`).join(' && '),
+		Object.fromEntries(BULK.map((name, i) => [`bulk${i}`, name])),
+		limit
+	);
 
 export async function categories(): Promise<Category[]> {
 	return (await client().collection('categories').getFullList({ sort: 'order,name_fr' })).map(

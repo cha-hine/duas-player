@@ -32,6 +32,11 @@
 					ar: 'مجموعة مفتوحة من الترجمات الفرنسية: ترجمة أبو القاسم فخري، والنقحرة من موقع transliteration.org.'
 				},
 				{
+					name: 'Muhammad Hamidullah (édition révisée)',
+					fr: 'Traduction française lue par Youssouf Leclerc, affichée avec sa récitation, d’après le même recueil.',
+					ar: 'الترجمة الفرنسية التي يقرؤها يوسف لوكلير، تُعرض مع تلاوته، من المجموعة نفسها.'
+				},
+				{
 					name: 'Tanzil — traductions',
 					url: 'https://tanzil.net/trans/',
 					fr: 'Traduction anglaise d’Ali Quli Qarai (usage non commercial).',
@@ -48,6 +53,12 @@
 					url: 'https://everyayah.com',
 					fr: 'Enregistrements verset par verset des récitateurs (aussi sur versebyversequran.com). Chaque sourate est reconstituée à partir de ses versets, ce qui donne le moment exact de chacun.',
 					ar: 'تسجيلات القرّاء آيةً آية (وأيضًا على versebyversequran.com). تُجمع كل سورة من آياتها، فيُعرف وقت كل آية بدقة.'
+				},
+				{
+					name: 'Le-Coran.com',
+					url: 'https://www.le-coran.com/',
+					fr: 'Le Coran lu en français, verset par verset, par Youssouf Leclerc (traduction de Muhammad Hamidullah).',
+					ar: 'القرآن مقروءًا بالفرنسية آيةً آية بصوت يوسف لوكلير (ترجمة محمد حميد الله).'
 				}
 			]
 		},

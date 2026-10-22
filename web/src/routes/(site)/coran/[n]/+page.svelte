@@ -77,9 +77,19 @@
 		return () => controller.abort();
 	});
 
-	/** "Mahmoud Khalil Al-Husary · mujawwad": the reciter, and the style the title ends with. */
+	/**
+	 * "Mahmoud Khalil Al-Husary · mujawwad": the reciter, and the style the track's title adds
+	 * after the surah's (whose own name may hold brackets: "Le pur culte (unicité de dieu)").
+	 */
 	function recitationLabel(r: MediaItem) {
-		const style = title(r).match(/\(([^)]+)\)$/)?.[1];
+		const base = title(surah);
+		const full = title(r);
+		const style = full.startsWith(base)
+			? full
+					.slice(base.length)
+					.trim()
+					.replace(/^\((.*)\)$/, '$1')
+			: '';
 		const who = r.reciter ? name(r.reciter) : title(r);
 		return style && r.reciter ? `${who} · ${style}` : who;
 	}

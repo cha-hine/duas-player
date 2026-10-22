@@ -5,10 +5,18 @@
 //   cd scripts
 //   $env:SAKINA_EMAIL = "you@example.com"; $env:SAKINA_PASSWORD = "..."
 //   node import-everyayah.ts [--reciters alafasy,husary] [--surahs 1,112-114] [--draft]
+//     [--leclerc D:/coran-francais-verset-par-verset --xlsx C:/path/41-traductions-Coran.xlsx]
+//
+// --leclerc adds Youssouf Leclerc reading the French translation (Hamidullah, revised edition),
+// from Le-Coran.com, in a local folder named like EveryAyah's; its tracks show that translation,
+// read from the "41 traductions du Coran" spreadsheet (--xlsx), instead of the library's.
 //
 // Needs the surahs in the text library first (import-quran.ts). Tracks already imported (same
 // slug) are skipped, so the script can be stopped and run again. A surah whose recording does
 // not have the same verses as the text (some Warsh surahs) is skipped for that reciter.
+import { readFile } from 'node:fs/promises';
+import { isAbsolute, join } from 'node:path';
+import ExcelJS from 'exceljs';
 import { joinMp3, readMp3, type Mp3Part } from './mp3.ts';
 
 const API = process.env.SAKINA_API ?? 'https://sakina-api.toophan.net';
@@ -25,13 +33,17 @@ const NO_BASMALA = new Set([1, 9]);
 
 type Style = 'murattal' | 'mujawwad' | 'muallim' | 'warsh' | 'translation';
 type Recitation = {
-	/** EveryAyah folders, best first; the next one fills a surah the first lacks. */
+	/** EveryAyah folders (or local ones), best first; the next one fills a surah the first lacks. */
 	folders: string[];
 	reciter: { slug: string; fr: string; ar: string };
 	style: Style;
 	language: string;
 	/** Shown after the surah name when the recitation is not a plain murattal. */
 	label?: { fr: string; ar: string };
+	/** Where the recordings come from, when not EveryAyah. */
+	source?: { name: string; url: string };
+	/** French translation read aloud, from the spreadsheet, shown instead of the library's. */
+	french?: string;
 };
 
 const r = (slug: string, fr: string, ar: string) => ({ slug, fr, ar });
@@ -109,6 +121,18 @@ function numbers(spec: string | undefined): number[] {
 	return spec.split(',').flatMap((part) => {
 		const [a, b] = part.split('-').map(Number);
 		return Array.from({ length: (b || a) - a + 1 }, (_, i) => a + i);
+	});
+}
+const leclercDir = arg('leclerc');
+if (leclercDir) {
+	CATALOGUE.push({
+		folders: [leclercDir],
+		reciter: r('youssouf-leclerc', 'Youssouf Leclerc', 'يوسف لوكلير'),
+		style: 'translation',
+		language: 'fr',
+		label: { fr: 'traduction française (Hamidullah)', ar: 'الترجمة الفرنسية' },
+		source: { name: 'Le-Coran.com', url: 'https://www.le-coran.com/' },
+		french: 'Hamidullah révisé'
 	});
 }
 const onlyReciters = arg('reciters')?.split(',');
@@ -195,8 +219,16 @@ async function upload(file: Uint8Array<ArrayBuffer>, filename: string, data: Rec
 
 // ——— EveryAyah ———
 
-/** The MP3 at `url`, or null when the folder does not have it. */
+/** The MP3 at `url` (or local path), or null when the folder does not have it. */
 async function mp3(url: string): Promise<Mp3Part | null> {
+	if (!url.startsWith('http')) {
+		try {
+			return readMp3(new Uint8Array(await readFile(url)));
+		} catch (e) {
+			if ((e as NodeJS.ErrnoException).code === 'ENOENT') return null;
+			throw e;
+		}
+	}
 	for (let attempt = 1; ; attempt++) {
 		try {
 			const res = await fetch(url);
@@ -210,8 +242,11 @@ async function mp3(url: string): Promise<Mp3Part | null> {
 	}
 }
 
-const file = (folder: string, sura: number, aya: number) =>
-	`${DATA}/${folder}/${String(sura).padStart(3, '0')}${String(aya).padStart(3, '0')}.mp3`;
+const isLocal = (folder: string) => isAbsolute(folder);
+const file = (folder: string, sura: number, aya: number) => {
+	const name = `${String(sura).padStart(3, '0')}${String(aya).padStart(3, '0')}.mp3`;
+	return isLocal(folder) ? join(folder, name) : `${DATA}/${folder}/${name}`;
+};
 
 /** Runs `tasks` with at most PARALLEL at once, keeping their order. */
 async function limited<T>(tasks: (() => Promise<T>)[]): Promise<T[]> {
@@ -271,6 +306,27 @@ const slugOf = (rec: Recitation, sura: number) =>
 	(rec.style === 'translation' ? `-${rec.language}` : '');
 
 const chosen = CATALOGUE.filter((rec) => !onlyReciters || onlyReciters.includes(rec.reciter.slug));
+
+/** Verses of the translations read aloud, keyed "sura|aya" (aya 0.5: the basmala). */
+const translations = new Map<string, Map<string, string>>();
+const wanted = [...new Set(chosen.flatMap((rec) => (rec.french ? [rec.french] : [])))];
+if (wanted.length) {
+	const xlsx = arg('xlsx');
+	if (!xlsx) throw new Error(`--xlsx is needed for the ${wanted.join(', ')} translation`);
+	const book = new ExcelJS.Workbook();
+	await book.xlsx.readFile(xlsx);
+	const sheet = book.getWorksheet('Traductions Coran');
+	if (!sheet) throw new Error('Sheet "Traductions Coran" not found');
+	for (const name of wanted) translations.set(name, new Map());
+	sheet.eachRow((row, i) => {
+		if (i === 1) return;
+		const v = row.values as unknown[];
+		translations.get(String(v[4]))?.set(`${v[2]}|${v[3]}`, String(v[5] ?? '').trim());
+	});
+	for (const [name, verses] of translations) {
+		if (verses.size === 0) throw new Error(`Translation "${name}" not found in the spreadsheet`);
+	}
+}
 const started = Date.now();
 let done = 0;
 let sent = 0;
@@ -290,9 +346,12 @@ async function importSurah(rec: Recitation, reciter: string, sura: number, slug:
 	const parts: Mp3Part[] = [];
 	const lines: (TextLine & { start: number; end: number })[] = [];
 	let at = 0;
+	const read = rec.french ? translations.get(rec.french)! : null;
 	const add = (line: TextLine, part: Mp3Part) => {
 		parts.push(part);
-		lines.push({ ...line, start: Math.round(at * 100) / 100, end: Math.round((at + part.seconds) * 100) / 100 });
+		// The translation heard, when it is not the library's (the basmala line is aya 0.5)
+		const heard = read?.get(`${sura}|${line.n ?? 0.5}`);
+		lines.push({ ...line, ...(heard ? { fr: heard } : {}), start: Math.round(at * 100) / 100, end: Math.round((at + part.seconds) * 100) / 100 });
 		at += part.seconds;
 	};
 	const basmalaLine = text.lines.find((l) => !l.n);
@@ -310,8 +369,8 @@ async function importSurah(rec: Recitation, reciter: string, sura: number, slug:
 		language: rec.language,
 		published,
 		status: 'pending',
-		origin_url: `${DATA}/${found.folder}/`,
-		submitted_by: 'EveryAyah'
+		origin_url: rec.source?.url ?? `${DATA}/${found.folder}/`,
+		submitted_by: rec.source?.name ?? 'EveryAyah'
 	});
 	// Text and timings together: already synced, so not queued for the home agent
 	await call(`${API}/api/collections/tracks/records/${record.id}`, json('PATCH', { text: text.id, lines }));
