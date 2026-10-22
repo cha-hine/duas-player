@@ -58,8 +58,12 @@ export async function waitForPocketBase(retryMs = 5000): Promise<void> {
 	}
 }
 
-export async function listByStatus(collection: string, status: string): Promise<MediaRecord[]> {
-	const filter = encodeURIComponent(`status="${status}"`);
+export async function listByStatus(
+	collection: string,
+	status: string,
+	also = ''
+): Promise<MediaRecord[]> {
+	const filter = encodeURIComponent(`status="${status}"${also ? ` && (${also})` : ''}`);
 	const res = await request(`/api/collections/${collection}/records?filter=${filter}&sort=created&perPage=50`);
 	return (await res.json()).items;
 }

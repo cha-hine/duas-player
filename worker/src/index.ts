@@ -1,8 +1,9 @@
 // Media worker: picks up tracks and videos with status "pending" and processes them
-// with ffmpeg, one at a time. PocketBase hooks (pb/pb_hooks/media.pb.js) set "pending"
-// when a file is uploaded or replaced; setting it by hand reprocesses a record.
+// with ffmpeg, a few at a time. PocketBase hooks (pb/pb_hooks/media.pb.js) set "pending"
+// when a file is uploaded or replaced; setting it by hand reprocesses a record. Media sent by
+// people go first; recitations imported in bulk (thousands, playable meanwhile) after.
 import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { cpus, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { processTrack } from './audio.ts';
 import { listByStatus, update, waitForPocketBase, type MediaRecord } from './pb.ts';
@@ -11,6 +12,15 @@ import { processVideo } from './video.ts';
 const POLL_MS = Number(process.env.POLL_MS ?? 10_000);
 const ERROR_MAX = 2000;
 const COLLECTIONS = ['tracks', 'videos'] as const;
+/** Jobs at once: all cores but one (the site and PocketBase share the server), at most 4. */
+const CONCURRENCY = Math.max(
+	1,
+	Number(process.env.WORKER_CONCURRENCY) || Math.min(4, cpus().length - 1)
+);
+/** Imported by scripts/import-everyayah.ts, like BULK in web/src/lib/server/content.ts. */
+const NOT_BULK = 'submitted_by != "EveryAyah" && submitted_by != "Le-Coran.com"';
+/** Records taken by one of the parallel loops. */
+const claimed = new Set<string>();
 
 const log = (msg: string) => console.log(`[worker] ${new Date().toISOString()} ${msg}`);
 
@@ -44,25 +54,34 @@ async function requeueInterrupted() {
 }
 
 async function nextJob(): Promise<MediaRecord | undefined> {
-	for (const collection of COLLECTIONS) {
-		const [record] = await listByStatus(collection, 'pending');
-		if (record) return record;
+	for (const also of [NOT_BULK, '']) {
+		for (const collection of COLLECTIONS) {
+			const record = (await listByStatus(collection, 'pending', also)).find((r) => !claimed.has(r.id));
+			if (record) {
+				claimed.add(record.id);
+				return record;
+			}
+		}
 	}
 }
 
 await waitForPocketBase();
 await requeueInterrupted().catch((e) => log(`startup check failed: ${e instanceof Error ? e.message : e}`));
-log('ready, watching for new media');
+log(`ready, watching for new media (${CONCURRENCY} at a time)`);
 
-for (;;) {
-	try {
-		const job = await nextJob();
-		if (job) {
-			await processOne(job);
-			continue;
+async function loop() {
+	for (;;) {
+		try {
+			const job = await nextJob();
+			if (job) {
+				await processOne(job).finally(() => claimed.delete(job.id));
+				continue;
+			}
+		} catch (e) {
+			log(`poll failed: ${e instanceof Error ? e.message : e}`);
 		}
-	} catch (e) {
-		log(`poll failed: ${e instanceof Error ? e.message : e}`);
+		await new Promise((resolve) => setTimeout(resolve, POLL_MS));
 	}
-	await new Promise((resolve) => setTimeout(resolve, POLL_MS));
 }
+
+await Promise.all(Array.from({ length: CONCURRENCY }, loop));

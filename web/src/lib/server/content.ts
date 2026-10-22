@@ -8,7 +8,14 @@ import { PB_URL } from './pocketbase.ts';
 
 type Collection = 'tracks' | 'videos';
 const COLLECTIONS: Collection[] = ['tracks', 'videos'];
-const READY = 'status = "ready"';
+/** Recitations imported in bulk (scripts/import-everyayah.ts): left out of "latest additions". */
+const BULK = ['EveryAyah', 'Le-Coran.com'];
+const FROM_BULK = BULK.map((name) => `submitted_by = "${name}"`).join(' || ');
+/**
+ * Playable: processed by the worker, or imported in bulk (verse-joined MP3s that play as they
+ * are, with exact timings, while the worker gets to them one by one).
+ */
+const READY = `(status = "ready" || (status != "error" && (${FROM_BULK})))`;
 const EXPAND = 'category,reciter';
 const ITEM_EXPAND = 'category,reciter,text';
 // Lists leave out the heavy fields (waveform, energy, synced text, search text)
@@ -95,9 +102,6 @@ async function listItems(filter: string, params: Record<string, unknown> = {}, l
 		.sort(newestFirst)
 		.slice(0, limit);
 }
-
-/** Recitations imported in bulk (scripts/import-everyayah.ts), left out of "latest additions". */
-const BULK = ['EveryAyah', 'Le-Coran.com'];
 
 export const latest = (limit: number) =>
 	listItems(

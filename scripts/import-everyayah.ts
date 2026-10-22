@@ -372,8 +372,9 @@ async function importSurah(rec: Recitation, reciter: string, sura: number, slug:
 		origin_url: rec.source?.url ?? `${DATA}/${found.folder}/`,
 		submitted_by: rec.source?.name ?? 'EveryAyah'
 	});
-	// Text and timings together: already synced, so not queued for the home agent
-	await call(`${API}/api/collections/tracks/records/${record.id}`, json('PATCH', { text: text.id, lines }));
+	// Text, timings and duration together: already synced (not queued for the home agent) and
+	// listed with its length before the worker gets to it
+	await call(`${API}/api/collections/tracks/records/${record.id}`, json('PATCH', { text: text.id, lines, duration: Math.round(at * 100) / 100 }));
 
 	done++;
 	sent += audio.length;
