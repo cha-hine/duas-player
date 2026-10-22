@@ -2,10 +2,13 @@
 
 A small program for an always-on PC. It does work the server can't or shouldn't do:
 
-- **Automatic sync suggestions:** when an editor clicks "Demander une suggestion" in
-  `/admin/textes/<track>`, the agent downloads the audio, transcribes it with Whisper
-  (whisper.cpp, word timings), aligns the known Arabic lines with what it heard and sends back the
-  suggested start of each line. The editor applies them and reviews them in "Ajuster".
+- **Automatic sync:** a track uploaded with a library text (or linked to one later) is queued by
+  the server (`pb/pb_hooks/sync.js`); an editor can also click "Demander une suggestion" in
+  `/admin/textes/<track>`. The agent downloads the audio, transcribes it with Whisper
+  (whisper.cpp, word timings), aligns the known Arabic lines with what it heard and finds the
+  start of each line. When at least 80 % of the words are found overall and 50 % on every line,
+  it writes the timings into the track, which then plays synced; otherwise the editor applies the
+  suggestion and reviews it in "Ajuster". A track synced by hand is never overwritten.
   Count roughly the length of the audio on a recent CPU (46 s of Al-Fatiha: 39 s).
 
 It contacts the server (no port to open at home) and uses the worker's PocketBase account.

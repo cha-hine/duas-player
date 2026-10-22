@@ -1,12 +1,16 @@
 /// <reference path="../pb_data/types.d.ts" />
 
-// Queues uploaded media for the worker (worker/), and cleans up after deleted videos.
+// Queues uploaded media for the worker (worker/), queues tracks linked to a library text for
+// automatic sync (sync.js), and cleans up after deleted videos.
 // Each handler runs in its own context, so values are computed inside them.
 
 onRecordCreate(
 	(e) => {
 		if (!e.record.getString('status')) e.record.set('status', 'pending');
 		e.record.set('search', require(`${__hooks}/search.js`).searchText(e.app, e.record));
+		if (e.record.collection().name === 'tracks') {
+			require(`${__hooks}/sync.js`).queueSync(e.app, e.record, false);
+		}
 		e.next();
 	},
 	'tracks',
@@ -21,6 +25,10 @@ onRecordUpdate(
 			e.record.set('status', 'pending');
 		}
 		e.record.set('search', require(`${__hooks}/search.js`).searchText(e.app, e.record));
+		if (field === 'audio') {
+			const textChanged = e.record.getString('text') !== e.record.original().getString('text');
+			require(`${__hooks}/sync.js`).queueSync(e.app, e.record, textChanged);
+		}
 		e.next();
 	},
 	'tracks',

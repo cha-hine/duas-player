@@ -1,13 +1,14 @@
 // Sakina home agent: runs on an always-on PC and does the heavy or blocked work for the
-// server. For now: automatic sync suggestions (speech recognition + alignment) for tracks
-// whose editor asked for one (align_status = "pending").
+// server. For now: automatic sync (speech recognition + alignment) for tracks queued with
+// align_status = "pending", on upload with a library text or when an editor asks. Confident
+// timings are applied to the track; the others wait for review in the editor.
 import { createWriteStream } from 'node:fs';
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import type { ReadableStream } from 'node:stream/web';
-import { align } from './align.ts';
+import { align, isConfident } from './align.ts';
 import { config } from './config.ts';
 import { toWav, transcribe } from './whisper.ts';
 
@@ -39,7 +40,24 @@ const patch = (id: string, data: object) =>
 		body: JSON.stringify(data)
 	});
 
-type Track = { id: string; title_fr: string; stream: string; audio: string; lines: { ar?: string }[] | null };
+type Line = { start: number; end: number; ar?: string };
+type Track = { id: string; title_fr: string; stream: string; audio: string; lines: Line[] | null };
+
+/** Seconds of audio in the 16 kHz mono 16-bit WAV made for whisper. */
+const wavSeconds = async (wav: string) => ((await stat(wav)).size - 44) / 32_000;
+
+/**
+ * Writes the timings into the track itself, so it plays synced without waiting for an editor,
+ * unless someone synced it by hand meanwhile or changed its text.
+ */
+async function publishTimings(id: string, starts: number[], duration: number): Promise<boolean> {
+	const res = await api(`/api/collections/tracks/records/${id}?fields=lines`);
+	const lines = ((await res.json()).lines ?? []) as Line[];
+	if (lines.length !== starts.length || lines.some((l) => l.end > 0)) return false;
+	const synced = lines.map((line, i) => ({ ...line, start: starts[i], end: starts[i + 1] ?? duration }));
+	await patch(id, { lines: synced });
+	return true;
+}
 
 async function suggestSync(track: Track) {
 	const lines = (track.lines ?? []).map((l) => l.ar ?? '');
@@ -58,11 +76,17 @@ async function suggestSync(track: Track) {
 		const heard = await transcribe(wav, join(dir, 'words'), lines.slice(0, 2).join(' '));
 		const result = align(lines, heard);
 		const average = result.confidence.reduce((s, c) => s + c, 0) / Math.max(1, result.confidence.length);
+		const applied = isConfident(result) && (await publishTimings(track.id, result.starts, await wavSeconds(wav)));
 		log(
 			`"${track.title_fr}": ${heard.length} words heard, ${lines.length} lines, ` +
-				`${Math.round(average * 100)} % of words found, ${((Date.now() - started) / 1000).toFixed(0)} s`
+				`${Math.round(average * 100)} % of words found, ${((Date.now() - started) / 1000).toFixed(0)} s` +
+				(applied ? ', timings applied' : ', left for review')
 		);
-		await patch(track.id, { align_status: 'ready', align_result: { ...result, lines: lines.length }, align_error: '' });
+		await patch(track.id, {
+			align_status: 'ready',
+			align_result: { ...result, lines: lines.length, applied },
+			align_error: ''
+		});
 	} finally {
 		await rm(dir, { recursive: true, force: true });
 	}

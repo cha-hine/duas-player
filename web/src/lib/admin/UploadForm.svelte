@@ -4,6 +4,8 @@
 	import { LANGUAGES } from '#lib/languages.ts';
 	import { UPLOAD_TARGETS, type UploadCollection } from '#lib/upload-protocol.ts';
 	import { UploadFailed, uploadFile, type Progress } from '#lib/uploader.ts';
+	import LibraryPicker from './LibraryPicker.svelte';
+	import type { LibraryText } from './library.ts';
 	import { pb, slugify } from './pb.ts';
 	import './forms.css';
 
@@ -17,6 +19,9 @@
 	let published = $state(false);
 	let language = $state('ar');
 	let files = $state<FileList>();
+	/** Library text recited in the audio: the server queues it for automatic sync. */
+	let text = $state<LibraryText | null>(null);
+	let picking = $state(false);
 
 	let categories = $state<RecordModel[]>([]);
 	let reciters = $state<RecordModel[]>([]);
@@ -43,6 +48,15 @@
 			.then((list) => (reciters = list));
 	});
 
+	/** Fills what the text already says (titles, category) when still empty. */
+	function useText(picked: LibraryText) {
+		text = picked;
+		picking = false;
+		if (!titleFr) titleFr = picked.title_fr;
+		if (!titleAr && picked.title_ar) titleAr = picked.title_ar;
+		if (!category && picked.category) category = picked.category;
+	}
+
 	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		if (!file) return;
@@ -64,13 +78,17 @@
 						reciter,
 						published,
 						language,
-						status: 'pending'
+						status: 'pending',
+						...(collection === 'tracks' && text ? { text: text.id } : {})
 					}
 				},
 				(p) => (progress = p)
 			);
-			done = `« ${record.title_fr} » a été ajouté.`;
+			done = text
+				? `« ${record.title_fr} » a été ajouté. L'agent va le synchroniser avec « ${text.title_fr} ».`
+				: `« ${record.title_fr} » a été ajouté.`;
 			titleFr = titleAr = slug = '';
+			text = null;
 			slugEdited = false;
 			files = undefined;
 			progress = null;
@@ -119,6 +137,30 @@
 			<small class="error">{fieldErrors[UPLOAD_TARGETS[collection]]}</small>
 		{/if}
 	</label>
+
+	{#if collection === 'tracks'}
+		<div class="field">
+			<span>Texte récité (optionnel)</span>
+			{#if text}
+				<div class="picked">
+					<strong>{text.title_fr}</strong>
+					{#if text.title_ar}<span lang="ar" dir="rtl">{text.title_ar}</span>{/if}
+					<Button variant="ghost" onclick={() => (picking = true)}>Changer</Button>
+					<Button variant="ghost" onclick={() => (text = null)}>Retirer</Button>
+				</div>
+			{:else}
+				<div>
+					<Button variant="secondary" onclick={() => (picking = true)}>
+						Choisir dans la bibliothèque
+					</Button>
+				</div>
+			{/if}
+			<small>
+				Sourate, doua, ziyara… L'agent place alors chaque ligne sur l'audio tout seul ; vous
+				vérifiez ensuite dans « Textes synchronisés ».
+			</small>
+		</div>
+	{/if}
 
 	<div class="row-2">
 		<label class="field">
@@ -204,6 +246,10 @@
 	</Button>
 </form>
 
+{#if picking}
+	<LibraryPicker {category} onpick={useText} onclose={() => (picking = false)} />
+{/if}
+
 <style>
 	h1 {
 		font-size: var(--text-2xl);
@@ -227,6 +273,13 @@
 		width: 18px;
 		height: 18px;
 		accent-color: var(--color-accent);
+	}
+
+	.picked {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-3);
 	}
 
 	.progress {

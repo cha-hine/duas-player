@@ -5,7 +5,8 @@
 	import type { Draft } from './draft.svelte.ts';
 
 	// Asks the home agent (agent/) for suggested timings, then applies them to the draft.
-	type Result = { starts: number[]; confidence: number[]; lines: number };
+	/** `applied`: confident enough, the agent already wrote the timings into the track. */
+	type Result = { starts: number[]; confidence: number[]; lines: number; applied?: boolean };
 	type Props = {
 		record: RecordModel;
 		draft: Draft;
@@ -34,6 +35,9 @@
 				.collection('tracks')
 				.getOne(record.id, { fields: 'align_status,align_result,align_error' });
 			record = { ...record, ...fresh };
+			// Already in the track: the draft takes them too, so saving it does not undo them
+			const done = fresh.align_result as Result | null;
+			if (done?.applied && done.lines === draft.count) draft.starts = done.starts.slice();
 		}, POLL_MS);
 		return () => clearInterval(timer);
 	});
@@ -78,6 +82,11 @@
 			<p class="state">Reconnaissance en cours… cela peut prendre la durée de l'audio.</p>
 		{:else if status === 'error'}
 			<p class="state error">Échec : {record.align_error}</p>
+		{:else if status === 'ready' && result?.applied}
+			<p class="state ok">
+				Synchronisée automatiquement : {result.lines} lignes, {average} % des mots retrouvés. Le texte
+				est déjà dans le lecteur ; vérifiez-le à l'étape « Ajuster ».
+			</p>
 		{:else if status === 'ready' && result}
 			<p class="state ok">
 				Suggestion prête : {result.lines} lignes, {average} % des mots retrouvés.
@@ -87,7 +96,7 @@
 		{#if message}<p class="state error">{message}</p>{/if}
 	</div>
 	<div class="actions">
-		{#if status === 'ready' && result && !stale}
+		{#if status === 'ready' && result && !stale && !result.applied}
 			<Button onclick={apply}>Appliquer et vérifier</Button>
 		{/if}
 		<Button

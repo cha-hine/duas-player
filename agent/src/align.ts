@@ -45,6 +45,17 @@ const GAP_TEXT = -0.5; // a text word the recogniser missed
 const GAP_HEARD = -0.3; // an extra recognised word (repetition, filler, misheard split)
 const WORD_SECONDS = 0.45; // fallback pace when estimating from a word later in the line
 
+/** Applied without review when this share of the words is found overall, and on every line. */
+const SURE_AVERAGE = 0.8;
+const SURE_LINE = 0.5;
+
+/** Whether an alignment is good enough to be published as is (the editor can still adjust). */
+export function isConfident({ confidence }: Alignment): boolean {
+	if (confidence.length === 0) return false;
+	const average = confidence.reduce((s, c) => s + c, 0) / confidence.length;
+	return average >= SURE_AVERAGE && confidence.every((c) => c >= SURE_LINE);
+}
+
 /**
  * Start time of each line. `lines` are the Arabic texts, `heard` the recognised words with
  * their times, in order.
