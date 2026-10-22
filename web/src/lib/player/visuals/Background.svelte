@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Theme } from '../settings.svelte.ts';
 	import NatureScene, { SCENES, type Scene } from './NatureScene.svelte';
+	import SkyLife from './SkyLife.svelte';
 	import { FRAGMENTS, VERTEX } from './shaders.ts';
 
 	// Animated background of the immersive player: a WebGL sky, or a calm landscape. `level`
@@ -133,14 +134,30 @@
 {:else}
 	<canvas bind:this={canvas} aria-hidden="true"></canvas>
 {/if}
+{#if !scene}
+	<!-- Over the skies: birds and clouds at dawn, shooting stars at night -->
+	<div class="life" aria-hidden="true">
+		{#if theme === 'nuit'}
+			<SkyLife stars />
+		{:else}
+			<SkyLife clouds birds cloudColour="240 210 160" />
+		{/if}
+	</div>
+{/if}
 
 <style>
 	canvas,
-	.fallback {
+	.fallback,
+	.life {
 		position: absolute;
 		inset: 0;
 		width: 100%;
 		height: 100%;
+	}
+
+	.life {
+		overflow: hidden;
+		pointer-events: none;
 	}
 
 	/* Devices without WebGL: a slow gradient instead */

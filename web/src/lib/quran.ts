@@ -20,3 +20,18 @@ export type SurahSummary = {
 	verses: number;
 	recitations: number;
 };
+
+/** "sourate-002-husary-mujawwad" -> { number: 2, variant: "-husary-mujawwad" }; null otherwise. */
+export function recitationSlug(slug: string): { number: number; variant: string } | null {
+	const found = /^sourate-(\d{3})(-[a-z0-9-]+)$/.exec(slug);
+	const number = found ? Number(found[1]) : 0;
+	return found && number >= 1 && number <= 114 ? { number, variant: found[2] } : null;
+}
+
+/** The same recitation of the surah `step` away (next: 1, previous: -1), if there is one. */
+export function neighbourRecitation(slug: string, step: 1 | -1): string | null {
+	const parsed = recitationSlug(slug);
+	const number = (parsed?.number ?? 0) + step;
+	if (!parsed || number < 1 || number > 114) return null;
+	return `sourate-${String(number).padStart(3, '0')}${parsed.variant}`;
+}

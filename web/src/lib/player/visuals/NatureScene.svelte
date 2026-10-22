@@ -4,6 +4,8 @@
 </script>
 
 <script lang="ts">
+	import SkyLife from './SkyLife.svelte';
+
 	// Calm landscapes for the immersive player. The scenery frames the screen (sides and
 	// bottom) and the middle stays open sky, so nothing stands behind the text. Life comes from
 	// small layers that only move by transform or opacity, which the graphics chip does alone
@@ -76,17 +78,17 @@
 		}));
 	}
 
-	/** Shooting stars from the top corners, flying outwards. */
-	const SHOOTING = [
-		{ x: 22, y: 6, angle: 160, delay: -1, every: 11 },
-		{ x: 70, y: 4, angle: 18, delay: -6, every: 13 },
-		{ x: 12, y: 16, angle: 150, delay: -9, every: 17 },
-		{ x: 84, y: 12, angle: 25, delay: -3, every: 19 }
-	];
-
 	const LEAF_COLOURS = ['#c9a24b', '#b8642f', '#8f3b2b'];
-	const leaves = particles(21, 12);
-	const fireflies = particles(33, 16);
+	const leaves = particles(21, 24);
+	const fireflies = particles(33, 26);
+	/** Sand blown along the ground, as [height %, length vw, seconds, delay]. */
+	const SAND = [
+		[4, 30, 6, -1],
+		[7, 22, 8, -4],
+		[2, 40, 5, -2],
+		[9, 18, 9, -6],
+		[5, 26, 7, -3]
+	];
 	const skyStars = { mer: stars(3, 70), dunes: stars(11, 90), montagnes: stars(5, 36) };
 
 	const hill = (x: number) => 430 + x * 0.24 + (x > 300 ? (x - 300) * 0.5 : 0);
@@ -107,26 +109,13 @@
 	</svg>
 {/snippet}
 
-{#snippet shootingStars()}
-	{#each SHOOTING as s, i (i)}
-		<span
-			class="shoot"
-			style:left="{s.x}%"
-			style:top="{s.y}%"
-			style:--angle="{s.angle}deg"
-			style:animation-duration="{s.every}s"
-			style:animation-delay="{s.delay}s"
-		></span>
-	{/each}
-{/snippet}
-
 <div class="scene {scene}" aria-hidden="true">
 	{#if scene === 'montagnes'}
 		{@render starsSvg(skyStars.montagnes)}
 		<div class="glow sunrise" bind:this={glow}></div>
 		<div class="rays"></div>
 		<div class="rays right"></div>
-		{@render shootingStars()}
+		<SkyLife stars clouds birds />
 		<svg class="side left" viewBox="0 0 500 700" preserveAspectRatio="xMinYMax meet">
 			<path
 				d="M0 700 V250 L90 170 L170 255 L240 205 L320 290 L390 360 L450 470 L490 640 L496 700Z"
@@ -164,16 +153,24 @@
 		{/each}
 	{:else if scene === 'mer'}
 		{@render starsSvg(skyStars.mer)}
-		{@render shootingStars()}
+		<SkyLife stars clouds birds cloudColour="200 215 235" />
 		<div class="moon-glow" bind:this={glow}></div>
 		<div class="moon"></div>
-		<svg class="side left" viewBox="0 0 500 700" preserveAspectRatio="xMinYMax meet">
-			<path
-				d="M0 700 V330 L60 300 L120 340 L150 420 L210 470 L240 560 L300 620 L320 700Z"
-				fill="#13253b"
-			/>
-			<path d="M0 700 V470 L70 450 L130 520 L170 600 L230 660 L240 700Z" fill="#0b1828" />
-		</svg>
+		<!-- Cliff with a lighthouse whose beam sweeps the sky -->
+		<div class="side left cliff">
+			<span class="beam"></span>
+			<span class="lamp"></span>
+			<svg viewBox="0 0 500 700" preserveAspectRatio="xMinYMax meet">
+				<path
+					d="M0 700 V330 L60 300 L120 340 L150 420 L210 470 L240 560 L300 620 L320 700Z"
+					fill="#13253b"
+				/>
+				<path d="M48 302 L54 230 L74 230 L80 312Z" fill="#1d3049" />
+				<path d="M50 230 L64 214 L78 230Z" fill="#1d3049" />
+				<rect x="55" y="232" width="18" height="10" fill="#ffe7a3" />
+				<path d="M0 700 V470 L70 450 L130 520 L170 600 L230 660 L240 700Z" fill="#0b1828" />
+			</svg>
+		</div>
 		<svg class="side right" viewBox="0 0 500 700" preserveAspectRatio="xMinYMax meet">
 			<path d="M0 700 V560 L80 540 L150 590 L190 650 L210 700Z" fill="#0b1828" />
 		</svg>
@@ -185,7 +182,7 @@
 		</div>
 	{:else}
 		{@render starsSvg(skyStars.dunes)}
-		{@render shootingStars()}
+		<SkyLife stars clouds cloudColour="240 205 170" />
 		<div class="crescent"></div>
 		<div class="glow dusk" bind:this={glow}></div>
 		<svg class="ground far" viewBox="0 0 1600 200" preserveAspectRatio="none">
@@ -222,6 +219,15 @@
 			<path d="M0 110 C320 80 640 95 960 115 S1400 90 1600 100 V140 H0Z" fill="#231a25" />
 		</svg>
 		<div class="haze"></div>
+		{#each SAND as [y, length, seconds, delay], i (i)}
+			<span
+				class="sand"
+				style:bottom="{y}%"
+				style:width="{length}vw"
+				style:animation-duration="{seconds}s"
+				style:animation-delay="{delay}s"
+			></span>
+		{/each}
 		{#each fireflies as fly, i (i)}
 			<span
 				class="firefly"
@@ -267,7 +273,6 @@
 	.rays,
 	.mist,
 	.haze,
-	.shoot,
 	.leaf,
 	.leaf > span,
 	.firefly,
@@ -293,6 +298,65 @@
 
 	.side.left {
 		left: 0;
+	}
+
+	/* The cliff is a box shaped like its drawing, so the lighthouse beam can sit on it */
+	.cliff {
+		aspect-ratio: 500 / 700;
+	}
+
+	.cliff svg {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	.lamp {
+		position: absolute;
+		left: 12.8%;
+		top: 33.6%;
+		width: 14px;
+		height: 14px;
+		margin: -7px 0 0 -7px;
+		border-radius: 50%;
+		background: #fff3c4;
+		box-shadow: 0 0 24px 10px rgb(255 231 163 / 0.55);
+		animation: blink 2.2s ease-in-out infinite alternate;
+		will-change: opacity;
+	}
+
+	/* A long cone of light turning slowly over the sea and the sky */
+	.beam {
+		position: absolute;
+		left: 12.8%;
+		top: 33.6%;
+		width: 30vw;
+		height: 16vh;
+		margin-top: -8vh;
+		background: linear-gradient(
+			90deg,
+			rgb(255 240 200 / 0.38),
+			rgb(255 240 200 / 0.08) 60%,
+			transparent
+		);
+		clip-path: polygon(0 47%, 100% 0, 100% 100%, 0 53%);
+		transform-origin: 0 50%;
+		animation: beam 9s ease-in-out infinite alternate;
+		will-change: transform, opacity;
+		pointer-events: none;
+	}
+
+	/* Sand blown along the ground */
+	.sand {
+		position: absolute;
+		left: 0;
+		height: 2px;
+		border-radius: 2px;
+		background: linear-gradient(90deg, transparent, rgb(240 205 160 / 0.45), transparent);
+		animation: blow linear infinite;
+		will-change: transform, opacity;
+		pointer-events: none;
 	}
 
 	.side.right {
@@ -364,18 +428,6 @@
 		mask-image: radial-gradient(circle at 100% 0, #000, transparent 34%);
 		animation-duration: 17s;
 		animation-direction: alternate-reverse;
-	}
-
-	/* A shooting star: a short trail crossing a corner of the sky now and then */
-	.shoot {
-		position: absolute;
-		width: clamp(80px, 12vw, 180px);
-		height: 2px;
-		border-radius: 2px;
-		background: linear-gradient(90deg, rgb(244 239 227 / 0), rgb(255 255 255 / 0.95));
-		opacity: 0;
-		transform-origin: 0 50%;
-		animation: shoot linear infinite;
 	}
 
 	/* Autumn leaves falling along the edges, swaying as they go */
@@ -531,21 +583,28 @@
 		}
 	}
 
-	@keyframes shoot {
-		0% {
-			opacity: 0;
-			transform: rotate(var(--angle)) translateX(0) scaleX(0.3);
+	@keyframes beam {
+		from {
+			transform: rotate(-58deg);
+			opacity: 0.55;
 		}
-		1.5% {
+		to {
+			transform: rotate(-24deg);
 			opacity: 1;
 		}
-		7% {
+	}
+
+	@keyframes blow {
+		from {
+			transform: translateX(-40vw);
 			opacity: 0;
-			transform: rotate(var(--angle)) translateX(22vmin) scaleX(1);
 		}
-		100% {
+		20% {
+			opacity: 1;
+		}
+		to {
+			transform: translateX(110vw);
 			opacity: 0;
-			transform: rotate(var(--angle)) translateX(22vmin) scaleX(1);
 		}
 	}
 
@@ -623,11 +682,16 @@
 		.moon-glow,
 		.waves,
 		.glints,
-		.firefly {
+		.firefly,
+		.lamp,
+		.beam {
 			animation: none;
 		}
 
-		.shoot,
+		.sand {
+			display: none;
+		}
+
 		.leaf {
 			display: none;
 		}

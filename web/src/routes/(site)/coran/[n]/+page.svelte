@@ -15,7 +15,9 @@
 	import { player } from '#lib/player/player.svelte.ts';
 	import { settings } from '#lib/player/settings.svelte.ts';
 	import { lineAt } from '#lib/player/sync.ts';
-	import { arabicNumber, verseMark } from '#lib/quran.ts';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import { arabicNumber, recitationSlug, verseMark } from '#lib/quran.ts';
 	import { isSynced, lineLanguages, TEXT_LANGUAGES } from '#lib/text-languages.ts';
 	import type { PageProps } from './$types';
 
@@ -99,6 +101,29 @@
 	let to = $derived(verses.length);
 	const basmala = $derived(surah.lines.find((l) => !l.n) ?? null);
 	const playing = $derived(!!recitation && player.isCurrent(recitation));
+
+	/**
+	 * The recitation this page was playing; when the player goes on to the next surah by the
+	 * same reciter, the page follows it (if the listener follows the reading).
+	 */
+	let followed = '';
+	$effect(() => {
+		const slug = player.current?.slug ?? '';
+		if (surah.recitations.some((r) => r.slug === slug)) {
+			followed = slug;
+			return;
+		}
+		// The full-screen player stays open: the page catches up once it is closed
+		if (page.state.immersive) return;
+		const now = recitationSlug(slug);
+		const before = recitationSlug(followed);
+		if (follow && now && before && now.variant === before.variant && now.number !== surah.number) {
+			followed = slug;
+			// link() resolves the path itself, in the interface language
+			// eslint-disable-next-line svelte/no-navigation-without-resolve
+			void goto(link(`/coran/${now.number}`));
+		}
+	});
 	const isArabic = getLocale() === 'ar';
 
 	/** The verse being recited, when this surah's recitation is the one playing. */

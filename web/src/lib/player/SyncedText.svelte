@@ -19,6 +19,8 @@
 	/** Range of the automatic size, around the listener's own size for each language. */
 	const FIT_MIN = 0.35;
 	const FIT_MAX = 1.5;
+	/** The previous line fades out this fast; the new one's words wait for it. */
+	const OUT_MS = 200;
 
 	let time = $state(player.time);
 	let box = $state<HTMLElement>();
@@ -51,62 +53,61 @@
 
 	const words = (text: string) => text.trim().split(/\s+/);
 
-	/** Each fitting run; a newer one makes the older stop. */
-	let run = 0;
-	const frame = () =>
-		new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
 	/**
-	 * The largest size at which the current line (and the next one, below it) fits the stage:
-	 * a few trial sizes, once per line. Each trial is measured a frame later: the browser only
-	 * restyles these paragraphs when it draws. `hide`: a new line stays invisible meanwhile,
-	 * so its size does not flicker. Written straight to CSS, no re-render.
+	 * The largest size at which the current line (and the next one, below it) fits the stage.
+	 * Trial sizes are measured on an invisible copy without the words' animations: on the
+	 * animated text the browser would only restyle a frame later, and the line would flicker.
+	 * Done before the line is drawn, then written straight to CSS, no re-render.
 	 */
-	async function fit(hide = false) {
-		const id = ++run;
+	function fit() {
 		const stage = box?.parentElement;
 		const slide = box?.querySelector<HTMLElement>(`.slide[data-line="${index}"]`);
 		if (!box || !stage || !slide) return;
 		const style = getComputedStyle(stage);
 		const room =
 			stage.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
-		const needed = () =>
-			slide.offsetHeight + (box!.querySelector<HTMLElement>('.next')?.offsetHeight ?? 0) * 1.6;
-		if (hide) box.style.visibility = 'hidden';
+
+		const probe = box.cloneNode(false) as HTMLElement;
+		probe.style.cssText = `position: absolute; inset: 0 auto auto 0; width: ${box.clientWidth}px; visibility: hidden; pointer-events: none`;
+		probe.append(slide.cloneNode(true));
+		const next = box.querySelector('.next');
+		if (next) probe.append(next.cloneNode(true));
+		for (const el of probe.querySelectorAll<HTMLElement>('*')) {
+			el.style.animation = 'none';
+			el.style.transition = 'none';
+		}
+		stage.append(probe);
 		let low = FIT_MIN;
 		let high = FIT_MAX;
-		for (let i = 0; i < 6; i++) {
+		for (let i = 0; i < 7; i++) {
 			const mid = (low + high) / 2;
-			box.style.setProperty('--fit', mid.toFixed(3));
-			await frame();
-			if (id !== run) return;
-			if (needed() <= room) low = mid;
+			probe.style.setProperty('--fit', mid.toFixed(3));
+			if (probe.offsetHeight <= room) low = mid;
 			else high = mid;
 		}
-		box.style.setProperty('--fit', low.toFixed(3));
-		box.style.visibility = '';
+		probe.remove();
+		// On the line itself (and its follower): the previous line, fading out, keeps its size
+		slide.style.setProperty('--fit', low.toFixed(3));
+		box.querySelector<HTMLElement>('.next')?.style.setProperty('--fit', low.toFixed(3));
 	}
 
 	$effect(() => {
 		// Again for each line and each change of languages, fonts or sizes; then whenever fonts
 		// arrive (the fallback font is much taller than Amiri) and when the screen changes
 		void [index, languages, settings.fonts, settings.sizes];
-		fit(true);
-		const refit = () => fit();
+		fit();
 		const fonts = document.fonts;
-		fonts?.addEventListener('loadingdone', refit);
+		fonts?.addEventListener('loadingdone', fit);
 		const stage = box?.parentElement;
 		let first = true;
 		const observer = new ResizeObserver(() => {
 			// Observing reports the current size once: not a change
-			if (!first) refit();
+			if (!first) fit();
 			first = false;
 		});
 		if (stage) observer.observe(stage);
 		return () => {
-			run++;
-			if (box) box.style.visibility = '';
-			fonts?.removeEventListener('loadingdone', refit);
+			fonts?.removeEventListener('loadingdone', fit);
 			observer.disconnect();
 		};
 	});
@@ -119,7 +120,7 @@
 
 <div class="synced" bind:this={box}>
 	{#key line ? index : -1}
-		<div class="slide" data-line={line ? index : -1} out:fade={{ duration: 300 }}>
+		<div class="slide" data-line={line ? index : -1} out:fade={{ duration: OUT_MS }}>
 			{#if line}
 				{#each languages.filter((code) => line[code]?.trim()) as code, row (code)}
 					{@const lang = TEXT_LANGUAGES[code]}
@@ -232,7 +233,7 @@
 		margin-inline: 0.12em;
 		opacity: 0;
 		animation: word-in 650ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
-		animation-delay: calc(var(--row, 0) * 250ms + var(--i, 0) * 70ms);
+		animation-delay: calc(200ms + var(--row, 0) * 250ms + var(--i, 0) * 70ms);
 	}
 
 	@keyframes word-in {

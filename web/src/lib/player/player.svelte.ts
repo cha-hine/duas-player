@@ -1,6 +1,7 @@
 // The Sakina audio player: one queue for the whole visit, kept playing across page changes.
 // Its state is changed only in the browser (user actions), never during server rendering.
 import type { Line, MediaItem } from '#lib/media.ts';
+import { neighbourRecitation } from '#lib/quran.ts';
 
 export type Repeat = 'off' | 'all' | 'one';
 
@@ -27,7 +28,12 @@ class Player {
 	loop = $state<{ start: number; end: number; remaining: number; total: number } | null>(null);
 
 	current = $derived(this.queue[this.index] ?? null);
-	hasNext = $derived(this.repeat === 'all' || this.shuffle || this.index < this.queue.length - 1);
+	hasNext = $derived(
+		this.repeat === 'all' ||
+			this.shuffle ||
+			this.index < this.queue.length - 1 ||
+			!!(this.current && neighbourRecitation(this.current.slug, 1))
+	);
 
 	#audio: HTMLAudioElement | null = null;
 	#pendingSeek = 0;
@@ -97,14 +103,18 @@ class Player {
 			this.#go(this.index + 1);
 		} else if (this.repeat === 'all') {
 			this.#go(0);
+		} else if (this.current && neighbourRecitation(this.current.slug, 1)) {
+			void this.#nextSurah(1);
 		} else {
 			this.paused = true;
 		}
 	}
 
 	previous() {
-		if (this.time > RESTART_THRESHOLD || this.index === 0) this.seek(0);
-		else this.#go(this.index - 1);
+		if (this.time > RESTART_THRESHOLD) this.seek(0);
+		else if (this.index > 0) this.#go(this.index - 1);
+		else if (this.current && neighbourRecitation(this.current.slug, -1)) void this.#nextSurah(-1);
+		else this.seek(0);
 	}
 
 	/** Called when a track reaches its end. */
@@ -149,6 +159,34 @@ class Player {
 		this.paused = true;
 		this.queue = [];
 		this.index = 0;
+	}
+
+	/**
+	 * A Quran recitation goes on with the next (or previous) surah by the same reciter, in the
+	 * same style, when the queue holds nothing more: fetched, then played.
+	 */
+	async #nextSurah(step: 1 | -1) {
+		const from = this.current;
+		const slug = from && neighbourRecitation(from.slug, step);
+		if (!slug) return;
+		try {
+			const res = await fetch(`/api/quran/${slug}`);
+			// The listener may have chosen something else meanwhile
+			if (!res.ok || this.current !== from) {
+				if (!res.ok && step === 1) this.paused = true;
+				return;
+			}
+			const item: MediaItem = await res.json();
+			if (step === 1) {
+				this.queue = [...this.queue, item];
+				this.#go(this.queue.length - 1);
+			} else {
+				this.queue = [item, ...this.queue];
+				this.#go(0);
+			}
+		} catch {
+			if (step === 1) this.paused = true;
+		}
 	}
 
 	#go(index: number) {
