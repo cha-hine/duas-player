@@ -6,7 +6,7 @@ export const TEXT_LANGUAGES = {
 	ar: {
 		native: 'العربية',
 		fr: 'Arabe',
-		short: 'ع',
+		short: 'Ar',
 		lang: 'ar',
 		dir: 'rtl',
 		font: 'var(--font-quran)'
@@ -14,7 +14,7 @@ export const TEXT_LANGUAGES = {
 	translit: {
 		native: 'Translittération',
 		fr: 'Translittération',
-		short: 'Abc',
+		short: 'Tr',
 		lang: 'ar-Latn',
 		dir: 'ltr',
 		font: 'var(--font-latin)'
@@ -22,7 +22,7 @@ export const TEXT_LANGUAGES = {
 	fr: {
 		native: 'Français',
 		fr: 'Français',
-		short: 'FR',
+		short: 'Fr',
 		lang: 'fr',
 		dir: 'ltr',
 		font: 'var(--font-display-latin)'
@@ -30,7 +30,7 @@ export const TEXT_LANGUAGES = {
 	en: {
 		native: 'English',
 		fr: 'Anglais',
-		short: 'EN',
+		short: 'En',
 		lang: 'en',
 		dir: 'ltr',
 		font: 'var(--font-display-latin)'
@@ -38,7 +38,7 @@ export const TEXT_LANGUAGES = {
 	gu: {
 		native: 'ગુજરાતી',
 		fr: 'Gujarati',
-		short: 'ગુ',
+		short: 'Gu',
 		lang: 'gu',
 		dir: 'ltr',
 		font: 'var(--font-gujarati)'
@@ -46,7 +46,7 @@ export const TEXT_LANGUAGES = {
 	ur: {
 		native: 'اردو',
 		fr: 'Ourdou',
-		short: 'اردو',
+		short: 'Ur',
 		lang: 'ur',
 		dir: 'rtl',
 		font: 'var(--font-urdu)'
@@ -54,7 +54,7 @@ export const TEXT_LANGUAGES = {
 	fa: {
 		native: 'فارسی',
 		fr: 'Persan',
-		short: 'فا',
+		short: 'Fa',
 		lang: 'fa',
 		dir: 'rtl',
 		font: 'var(--font-arabic)'

@@ -13,6 +13,7 @@
 	} from '#lib/media.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { player } from '#lib/player/player.svelte.ts';
+	import { settings } from '#lib/player/settings.svelte.ts';
 	import { lineAt } from '#lib/player/sync.ts';
 	import { verseMark } from '#lib/quran.ts';
 	import { isSynced, lineLanguages, TEXT_LANGUAGES } from '#lib/text-languages.ts';
@@ -89,7 +90,8 @@
 								class:ar={code === 'ar'}
 								lang={TEXT_LANGUAGES[code].lang}
 								dir={TEXT_LANGUAGES[code].dir}
-								style:font-family={code === 'ar' ? undefined : TEXT_LANGUAGES[code].font}
+								style:font-family={settings.font(code).family}
+								style:--scale={settings.scale(code)}
 								>{line[code]}{#if code === 'ar' && line.n}
 									<span class="mark">{verseMark(line.n)}</span>{/if}</span
 							>
@@ -226,14 +228,15 @@
 	}
 
 	/* Each language aligned in its own direction (dir on the element) */
+	/* Fonts and sizes the listener chose in the player's text settings */
 	.text {
 		text-align: start;
 		color: var(--color-text-muted);
+		font-size: calc(1rem * var(--scale, 1));
 	}
 
 	.ar {
-		font-family: var(--font-arabic);
-		font-size: 1.5rem;
+		font-size: calc(1.5rem * var(--scale, 1));
 		line-height: 1.9;
 		color: var(--color-text);
 	}

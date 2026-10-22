@@ -1,4 +1,5 @@
-// Listener preferences for the immersive player, remembered on this device.
+// Listener preferences for the immersive player and the Quran pages, remembered on this device.
+import { TEXT_FONTS, type TextFont } from '#lib/text-fonts.ts';
 import { TEXT_LANGUAGE_CODES, type TextLanguage } from '#lib/text-languages.ts';
 
 /** Animated (WebGL) skies first, then the calm landscapes, light enough for TVs. */
@@ -8,24 +9,39 @@ export type Theme = (typeof THEMES)[number];
 /** On a TV, unless the listener chose otherwise: a landscape, which costs the chip nothing. */
 const TV_THEME: Theme = 'montagnes';
 
-export const TEXT_SCALES = [0.85, 1, 1.2, 1.45] as const;
+/** Size of each language's text, relative to the default: 60 % to 200 %, by tenths. */
+export const SIZE_MIN = 0.6;
+export const SIZE_MAX = 2;
+const SIZE_STEP = 0.1;
 
 const KEY = 'sakina-player';
 
 type Saved = {
 	theme: Theme;
-	textScale: number;
 	hidden: TextLanguage[];
-	// Before multilingual text: kept to read older saved settings
+	fonts: Partial<Record<TextLanguage, string>>;
+	sizes: Partial<Record<TextLanguage, number>>;
+	// Older saved settings: one size for every language, Arabic and French on or off
+	textScale?: number;
 	showArabic?: boolean;
 	showFrench?: boolean;
 };
 
+const isLanguage = (code: string): code is TextLanguage =>
+	(TEXT_LANGUAGE_CODES as string[]).includes(code);
+
+/** Rounded to a tenth (no 1.2000000002) and kept within the allowed sizes. */
+const clampSize = (size: number) =>
+	Math.min(SIZE_MAX, Math.max(SIZE_MIN, Math.round(size * 10) / 10));
+
 class PlayerSettings {
 	theme = $state<Theme>('aube');
-	textScale = $state(1);
 	/** Text languages the listener chose not to see. */
 	hidden = $state<TextLanguage[]>([]);
+	/** Font chosen per language (id from TEXT_FONTS); the first of the list otherwise. */
+	fonts = $state<Partial<Record<TextLanguage, string>>>({});
+	/** Text size per language, 1 = default. */
+	sizes = $state<Partial<Record<TextLanguage, number>>>({});
 
 	/** Reads saved preferences (browser only; storage may be unavailable). */
 	load() {
@@ -33,12 +49,23 @@ class PlayerSettings {
 		try {
 			const saved: Partial<Saved> = JSON.parse(localStorage.getItem(KEY) ?? '{}');
 			if (saved.theme && THEMES.includes(saved.theme)) this.theme = saved.theme;
-			if (typeof saved.textScale === 'number') this.textScale = saved.textScale;
 			if (Array.isArray(saved.hidden)) {
 				this.hidden = saved.hidden.filter((code) => TEXT_LANGUAGE_CODES.includes(code));
 			} else {
 				if (saved.showArabic === false) this.hidden.push('ar');
 				if (saved.showFrench === false) this.hidden.push('fr');
+			}
+			for (const [code, id] of Object.entries(saved.fonts ?? {})) {
+				if (isLanguage(code) && TEXT_FONTS[code].some((font) => font.id === id)) {
+					this.fonts[code] = id;
+				}
+			}
+			for (const [code, size] of Object.entries(saved.sizes ?? {})) {
+				if (isLanguage(code) && typeof size === 'number') this.sizes[code] = clampSize(size);
+			}
+			// The former single size applies to every language
+			if (!saved.sizes && typeof saved.textScale === 'number') {
+				for (const code of TEXT_LANGUAGE_CODES) this.sizes[code] = clampSize(saved.textScale);
 			}
 		} catch {
 			// private mode or blocked storage: keep defaults
@@ -47,17 +74,47 @@ class PlayerSettings {
 
 	save() {
 		try {
-			const value: Saved = { theme: this.theme, textScale: this.textScale, hidden: this.hidden };
+			const value: Saved = {
+				theme: this.theme,
+				hidden: this.hidden,
+				fonts: this.fonts,
+				sizes: this.sizes
+			};
 			localStorage.setItem(KEY, JSON.stringify(value));
 		} catch {
 			// not remembered, still applied for this visit
 		}
 	}
 
-	resizeText(step: 1 | -1) {
-		const i = TEXT_SCALES.indexOf(this.textScale as (typeof TEXT_SCALES)[number]);
-		const next = Math.min(TEXT_SCALES.length - 1, Math.max(0, (i < 0 ? 1 : i) + step));
-		this.textScale = TEXT_SCALES[next];
+	/** The font a language's text is shown in. */
+	font(code: TextLanguage): TextFont {
+		return TEXT_FONTS[code].find((font) => font.id === this.fonts[code]) ?? TEXT_FONTS[code][0];
+	}
+
+	/** The size chosen for a language (1 = default), before evening out the font. */
+	size(code: TextLanguage): number {
+		return this.sizes[code] ?? 1;
+	}
+
+	/** What to multiply a language's text size by: the listener's size and the font's own. */
+	scale(code: TextLanguage): number {
+		return this.size(code) * (this.font(code).scale ?? 1);
+	}
+
+	setFont(code: TextLanguage, id: string) {
+		this.fonts = { ...this.fonts, [code]: id };
+		this.save();
+	}
+
+	resize(code: TextLanguage, step: 1 | -1) {
+		this.sizes = { ...this.sizes, [code]: clampSize(this.size(code) + step * SIZE_STEP) };
+		this.save();
+	}
+
+	/** Back to the site's fonts and sizes. */
+	resetText() {
+		this.fonts = {};
+		this.sizes = {};
 		this.save();
 	}
 

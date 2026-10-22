@@ -1,12 +1,11 @@
 <script lang="ts">
-	import AArrowDown from '@lucide/svelte/icons/a-arrow-down';
-	import AArrowUp from '@lucide/svelte/icons/a-arrow-up';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Pause from '@lucide/svelte/icons/pause';
 	import Play from '@lucide/svelte/icons/play';
 	import Repeat from '@lucide/svelte/icons/repeat';
 	import Seo from '#lib/components/Seo.svelte';
+	import TextSettings from '#lib/components/TextSettings.svelte';
 	import Button from '#lib/components/ui/Button.svelte';
 	import IconButton from '#lib/components/ui/IconButton.svelte';
 	import { link } from '#lib/i18n.ts';
@@ -206,12 +205,7 @@
 					>{TEXT_LANGUAGES[code].short}</button
 				>
 			{/each}
-			<IconButton label={m.text_smaller()} onclick={() => settings.resizeText(-1)}
-				><AArrowDown /></IconButton
-			>
-			<IconButton label={m.text_bigger()} onclick={() => settings.resizeText(1)}
-				><AArrowUp /></IconButton
-			>
+			<TextSettings languages={available} />
 		</div>
 	</section>
 
@@ -254,9 +248,17 @@
 		</section>
 	{/if}
 
-	<div class="text" style:--scale={settings.textScale}>
+	<div class="text">
 		{#if basmala && languages.includes('ar')}
-			<p class="basmala" lang="ar" dir="rtl">{basmala.ar}</p>
+			<p
+				class="basmala"
+				lang="ar"
+				dir="rtl"
+				style:font-family={settings.font('ar').family}
+				style:--scale={settings.scale('ar')}
+			>
+				{basmala.ar}
+			</p>
 		{/if}
 		{#each verses as verse (verse.n)}
 			{@const n = verse.n!}
@@ -264,7 +266,13 @@
 				{#each languages as code (code)}
 					{#if verse[code]}
 						{#if code === 'ar'}
-							<p class="ar" lang="ar" dir="rtl">
+							<p
+								class="ar"
+								lang="ar"
+								dir="rtl"
+								style:font-family={settings.font('ar').family}
+								style:--scale={settings.scale('ar')}
+							>
 								{verse.ar}
 								<span class="mark">{verseMark(n)}</span>
 							</p>
@@ -273,7 +281,8 @@
 								class="translation"
 								lang={TEXT_LANGUAGES[code].lang}
 								dir={TEXT_LANGUAGES[code].dir}
-								style:font-family={TEXT_LANGUAGES[code].font}
+								style:font-family={settings.font(code).family}
+								style:--scale={settings.scale(code)}
 							>
 								<span class="n">{n}.</span>
 								{verse[code]}
@@ -310,6 +319,8 @@
 <style>
 	.page {
 		display: grid;
+		/* As wide as the screen: a long recitation name must not widen the page */
+		grid-template-columns: minmax(0, 1fr);
 		gap: var(--space-5);
 		padding-block: var(--space-6);
 	}
@@ -401,12 +412,26 @@
 		width: 4.5rem;
 	}
 
+	/* The recitation menu shrinks to the screen: some names are long */
+	.recitation {
+		flex: 1 1 14rem;
+		min-width: 0;
+	}
+
+	.recitation select {
+		flex: 1;
+		min-width: 0;
+		max-width: 100%;
+		text-overflow: ellipsis;
+	}
+
 	.note {
 		color: var(--color-text-muted);
 	}
 
 	.display {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		gap: var(--space-1);
 		margin-inline-start: auto;
@@ -438,6 +463,7 @@
 	}
 
 	.text {
+		--scale: 1;
 		display: grid;
 		gap: var(--space-2);
 		max-width: 64rem;
@@ -446,7 +472,6 @@
 	}
 
 	.basmala {
-		font-family: var(--font-quran);
 		font-size: calc(2rem * var(--scale));
 		text-align: center;
 		color: var(--color-accent-text);
@@ -468,7 +493,6 @@
 	}
 
 	.ar {
-		font-family: var(--font-quran);
 		font-size: calc(clamp(1.6rem, 3.2vw, 2.1rem) * var(--scale));
 		line-height: 2.2;
 		text-align: right;

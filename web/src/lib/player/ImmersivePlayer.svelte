@@ -1,6 +1,4 @@
 <script lang="ts">
-	import AArrowDown from '@lucide/svelte/icons/a-arrow-down';
-	import AArrowUp from '@lucide/svelte/icons/a-arrow-up';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import Pause from '@lucide/svelte/icons/pause';
 	import Play from '@lucide/svelte/icons/play';
@@ -11,10 +9,11 @@
 	import SkipBack from '@lucide/svelte/icons/skip-back';
 	import SkipForward from '@lucide/svelte/icons/skip-forward';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
+	import TextSettings from '#lib/components/TextSettings.svelte';
 	import IconButton from '#lib/components/ui/IconButton.svelte';
 	import { formatDuration, name, title } from '#lib/media.ts';
 	import { m } from '#lib/paraglide/messages.js';
-	import { lineLanguages, TEXT_LANGUAGES } from '#lib/text-languages.ts';
+	import { lineLanguages } from '#lib/text-languages.ts';
 	import { closeImmersive } from './immersive.ts';
 	import { player } from './player.svelte.ts';
 	import { settings, THEMES, type Theme } from './settings.svelte.ts';
@@ -40,7 +39,7 @@
 	const BACK_CODES = new Set([10009, 461]);
 
 	const item = $derived(player.current!);
-	/** Languages the current track's text is written in, offered as toggles. */
+	/** Languages the current track's text is written in, offered in the text settings. */
 	const languages = $derived(lineLanguages(player.lines));
 	let playButton = $state<HTMLElement>();
 
@@ -96,9 +95,42 @@
 		<SyncedText />
 	</div>
 
+	<!-- One line at the bottom: transport, position, then speed and display settings -->
 	<footer>
+		<div class="transport">
+			<IconButton
+				class="wide-only"
+				label={m.player_shuffle()}
+				aria-pressed={player.shuffle}
+				onclick={() => (player.shuffle = !player.shuffle)}
+			>
+				<Shuffle />
+			</IconButton>
+			<IconButton label={m.player_previous()} onclick={() => player.previous()}
+				><SkipBack /></IconButton
+			>
+			<IconButton class="wide-only" label={m.player_back10()} onclick={() => player.skip(-10)}
+				><Undo2 /></IconButton
+			>
+			<span bind:this={playButton}>
+				<IconButton
+					label={player.paused ? m.player_play() : m.player_pause()}
+					variant="filled"
+					onclick={() => player.toggle()}
+				>
+					{#if player.paused}<Play />{:else}<Pause />{/if}
+				</IconButton>
+			</span>
+			<IconButton class="wide-only" label={m.player_forward10()} onclick={() => player.skip(10)}
+				><Redo2 /></IconButton
+			>
+			<IconButton label={m.player_next()} onclick={() => player.next()} disabled={!player.hasNext}>
+				<SkipForward />
+			</IconButton>
+		</div>
+
 		<div class="seek">
-			<span>{formatDuration(player.currentTime) || '0:00'}</span>
+			<span class="time">{formatDuration(player.currentTime) || '0:00'}</span>
 			<input
 				type="range"
 				min="0"
@@ -109,46 +141,18 @@
 				aria-label={m.player_position()}
 				style:--progress="{player.duration ? (player.currentTime / player.duration) * 100 : 0}%"
 			/>
-			<span>{formatDuration(player.duration) || '0:00'}</span>
+			<span class="time">{formatDuration(player.duration) || '0:00'}</span>
 		</div>
 
-		<div class="transport">
+		<div class="options">
 			<IconButton
-				label={m.player_shuffle()}
-				aria-pressed={player.shuffle}
-				onclick={() => (player.shuffle = !player.shuffle)}
-			>
-				<Shuffle />
-			</IconButton>
-			<IconButton label={m.player_previous()} onclick={() => player.previous()}
-				><SkipBack /></IconButton
-			>
-			<IconButton label={m.player_back10()} onclick={() => player.skip(-10)}><Undo2 /></IconButton>
-			<span bind:this={playButton}>
-				<IconButton
-					label={player.paused ? m.player_play() : m.player_pause()}
-					variant="filled"
-					size="lg"
-					onclick={() => player.toggle()}
-				>
-					{#if player.paused}<Play />{:else}<Pause />{/if}
-				</IconButton>
-			</span>
-			<IconButton label={m.player_forward10()} onclick={() => player.skip(10)}><Redo2 /></IconButton
-			>
-			<IconButton label={m.player_next()} onclick={() => player.next()} disabled={!player.hasNext}>
-				<SkipForward />
-			</IconButton>
-			<IconButton
+				class="wide-only"
 				label={REPEAT_LABELS[player.repeat]()}
 				aria-pressed={player.repeat !== 'off'}
 				onclick={() => player.cycleRepeat()}
 			>
 				{#if player.repeat === 'one'}<Repeat1 />{:else}<Repeat />{/if}
 			</IconButton>
-		</div>
-
-		<div class="options">
 			<button
 				class="pill"
 				type="button"
@@ -157,36 +161,23 @@
 			>
 				{player.rate}×
 			</button>
-			<IconButton label={m.text_smaller()} onclick={() => settings.resizeText(-1)}
-				><AArrowDown /></IconButton
-			>
-			<IconButton label={m.text_bigger()} onclick={() => settings.resizeText(1)}
-				><AArrowUp /></IconButton
-			>
-			{#each languages as code (code)}
-				<button
-					class="pill"
-					type="button"
-					lang={TEXT_LANGUAGES[code].lang}
-					aria-pressed={!settings.hidden.includes(code)}
-					aria-label={m.toggle_language({ language: TEXT_LANGUAGES[code].native })}
-					title={TEXT_LANGUAGES[code].native}
-					onclick={() => settings.toggleLanguage(code, languages)}
-					>{TEXT_LANGUAGES[code].short}</button
-				>
-			{/each}
-			<div class="themes" role="group" aria-label={m.player_theme()}>
-				{#each THEMES as theme (theme)}
-					<button
-						class="swatch {theme}"
-						type="button"
-						aria-pressed={settings.theme === theme}
-						aria-label={THEME_LABELS[theme]()}
-						title={THEME_LABELS[theme]()}
-						onclick={() => settings.setTheme(theme)}
-					></button>
-				{/each}
-			</div>
+			<TextSettings {languages} toggles placement="above">
+				<div class="themes" role="group" aria-label={m.player_theme()}>
+					<strong>{m.player_theme()}</strong>
+					<div>
+						{#each THEMES as theme (theme)}
+							<button
+								class="swatch {theme}"
+								type="button"
+								aria-pressed={settings.theme === theme}
+								aria-label={THEME_LABELS[theme]()}
+								title={THEME_LABELS[theme]()}
+								onclick={() => settings.setTheme(theme)}
+							></button>
+						{/each}
+					</div>
+				</div>
+			</TextSettings>
 		</div>
 	</footer>
 </div>
@@ -197,7 +188,9 @@
 		inset: 0;
 		z-index: 50;
 		display: grid;
-		grid-template-rows: auto 1fr auto;
+		grid-template-rows: auto minmax(0, 1fr) auto;
+		/* As wide as the screen, whatever the text (a long line would widen the column) */
+		grid-template-columns: minmax(0, 1fr);
 		color: var(--sakina-ivory);
 		background: var(--sakina-night);
 		/* The player is always dark, whatever the site theme */
@@ -258,37 +251,25 @@
 	}
 
 	footer {
-		display: grid;
-		gap: var(--space-3);
-		padding: var(--space-3) var(--gutter) calc(var(--space-5) + env(safe-area-inset-bottom));
-		max-width: 56rem;
-		width: 100%;
-		margin-inline: auto;
-	}
-
-	.seek {
 		display: flex;
 		align-items: center;
 		gap: var(--space-3);
-		font-size: var(--text-xs);
-		font-variant-numeric: tabular-nums;
-		color: var(--sakina-mist);
-	}
-
-	.seek input {
-		flex: 1;
-		height: 24px;
-		accent-color: var(--sakina-gold);
-		cursor: pointer;
+		width: 100%;
+		max-width: 80rem;
+		margin-inline: auto;
+		padding: var(--space-2) var(--gutter) calc(var(--space-3) + env(safe-area-inset-bottom));
+		/* The text settings panel is dark too */
+		--panel-bg: var(--sakina-deep);
+		--color-border: rgb(244 239 227 / 0.18);
+		--color-accent-text: var(--sakina-gold);
 	}
 
 	.transport,
 	.options {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		flex-wrap: wrap;
-		gap: var(--space-2);
+		flex: none;
+		gap: var(--space-1);
 	}
 
 	.transport :global([aria-pressed='true']),
@@ -296,10 +277,29 @@
 		color: var(--sakina-gold);
 	}
 
+	.seek {
+		display: flex;
+		flex: 1;
+		align-items: center;
+		gap: var(--space-2);
+		min-width: 0;
+		font-size: var(--text-xs);
+		font-variant-numeric: tabular-nums;
+		color: var(--sakina-mist);
+	}
+
+	.seek input {
+		flex: 1;
+		min-width: 0;
+		height: 24px;
+		accent-color: var(--sakina-gold);
+		cursor: pointer;
+	}
+
 	.pill {
 		min-width: 44px;
 		height: 36px;
-		padding: 0 var(--space-3);
+		padding: 0 var(--space-2);
 		border: 1px solid rgb(244 239 227 / 0.25);
 		border-radius: var(--radius-pill);
 		background: transparent;
@@ -308,14 +308,28 @@
 		cursor: pointer;
 	}
 
-	.pill[aria-pressed='false'] {
-		opacity: 0.5;
+	.themes {
+		display: grid;
+		gap: var(--space-2);
+		padding-top: var(--space-2);
+		border-top: 1px solid rgb(244 239 227 / 0.12);
 	}
 
-	.themes {
+	.themes div {
 		display: flex;
 		gap: var(--space-2);
-		margin-inline-start: var(--space-3);
+	}
+
+	/* Narrow screens: the essentials only, on the same line */
+	@media (max-width: 640px) {
+		footer :global(.wide-only),
+		.time {
+			display: none;
+		}
+
+		footer {
+			gap: var(--space-2);
+		}
 	}
 
 	.swatch {

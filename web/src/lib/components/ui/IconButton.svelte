@@ -10,11 +10,11 @@
 		children: Snippet;
 	} & HTMLButtonAttributes;
 
-	let { label, variant = 'plain', size = 'md', children, ...rest }: Props = $props();
+	let { label, variant = 'plain', size = 'md', children, class: extra, ...rest }: Props = $props();
 </script>
 
 <button
-	class="icon-button {variant} {size}"
+	class={['icon-button', variant, size, extra]}
 	type="button"
 	aria-label={label}
 	title={label}

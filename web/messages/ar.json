@@ -56,8 +56,6 @@
 	"player_theme": "الأجواء",
 	"theme_aube": "الفجر",
 	"theme_nuit": "ليل مرصّع بالنجوم",
-	"text_smaller": "تصغير النص",
-	"text_bigger": "تكبير النص",
 	"listen": "استمع",
 	"listen_all": "استمع إلى الكل",
 	"now_playing": "قيد التشغيل",
@@ -92,5 +90,10 @@
 	"sources_reciters": "عرض قرّاء القرآن الكريم",
 	"theme_montagnes": "جبال",
 	"theme_mer": "بحر",
-	"theme_dunes": "كثبان"
+	"theme_dunes": "كثبان",
+	"text_settings": "عرض النص",
+	"text_reset": "الافتراضي",
+	"text_font": "الخط: {language}",
+	"text_smaller_lang": "تصغير: {language}",
+	"text_bigger_lang": "تكبير: {language}"
 }
