@@ -2,9 +2,9 @@
 	import Headphones from '@lucide/svelte/icons/headphones';
 	import Search from '@lucide/svelte/icons/search';
 	import Seo from '#lib/components/Seo.svelte';
-	import MediaGrid from '#lib/components/media/MediaGrid.svelte';
 	import SectionTitle from '#lib/components/media/SectionTitle.svelte';
 	import { link } from '#lib/i18n.ts';
+	import { name } from '#lib/media.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { arabicNumber } from '#lib/quran.ts';
@@ -63,10 +63,19 @@
 		</ol>
 	</section>
 
-	{#if data.recitations.length}
+	{#if data.reciters.length}
 		<section>
-			<SectionTitle title={m.quran_recitations()} />
-			<MediaGrid items={data.recitations} />
+			<SectionTitle title={m.quran_reciters()} />
+			<ul class="reciters">
+				{#each data.reciters as r (r.id)}
+					<li>
+						<a href={link(`/recitant/${r.slug}`)}>
+							<span dir="auto">{name(r)}</span>
+							<small>{m.surahs_count({ count: r.surahs })}</small>
+						</a>
+					</li>
+				{/each}
+			</ul>
 		</section>
 	{/if}
 </div>
@@ -188,6 +197,29 @@
 		align-items: center;
 		gap: 3px;
 		color: var(--color-secondary-text);
+	}
+
+	.reciters {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.reciters a {
+		display: inline-flex;
+		align-items: baseline;
+		gap: var(--space-2);
+		padding: var(--space-2) var(--space-4);
+		border-radius: var(--radius-pill);
+		font-weight: 600;
+	}
+
+	.reciters small {
+		color: var(--color-text-muted);
+		font-weight: 400;
 	}
 
 	.listen :global(svg) {

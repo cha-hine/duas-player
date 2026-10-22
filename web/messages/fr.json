@@ -70,7 +70,6 @@
 	"recitations_count": "{count} récitation(s)",
 	"quran_search": "Chercher une sourate (nom ou numéro)…",
 	"all_surahs": "Les 114 sourates",
-	"quran_recitations": "Récitations",
 	"no_recitation": "Aucune récitation synchronisée pour cette sourate pour l’instant : le texte se lit seul.",
 	"play_surah": "Écouter la sourate",
 	"play_from_verse": "Écouter à partir du verset {n}",
@@ -87,5 +86,10 @@
 	"repeating_forever": "Répétition en boucle",
 	"previous_surah": "Sourate précédente",
 	"next_surah": "Sourate suivante",
-	"recitation_label": "Récitation"
+	"recitation_label": "Récitation",
+	"quran_reciters": "Récitateurs",
+	"surahs_count": "{count} sourate(s)",
+	"nav_sources": "Sources",
+	"sources_intro": "D’où viennent les textes, les traductions et les récitations du site. Merci à celles et ceux qui les partagent.",
+	"sources_reciters": "Voir les récitateurs du Coran"
 }

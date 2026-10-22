@@ -10,7 +10,7 @@
 	import Button from '#lib/components/ui/Button.svelte';
 	import IconButton from '#lib/components/ui/IconButton.svelte';
 	import { link } from '#lib/i18n.ts';
-	import { name } from '#lib/media.ts';
+	import { name, title, type Line, type MediaItem } from '#lib/media.ts';
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { player } from '#lib/player/player.svelte.ts';
@@ -32,7 +32,57 @@
 	let follow = $state(true);
 
 	const recitation = $derived(surah.recitations.find((r) => r.id === recitationId) ?? null);
-	const synced = $derived(!!recitation && isSynced(recitation.lines));
+	/** Timings of the chosen recitation, loaded on demand (the list comes without them). */
+	let timings = $state<Line[]>([]);
+	const synced = $derived(isSynced(timings));
+
+	/** The same reciter and style as last time, e.g. "-husary-mujawwad" in its slug. */
+	const variant = (slug: string) => slug.replace(/^sourate-\d+/, '');
+	const REMEMBER = 'sakina-quran-recitation';
+
+	// On arrival and on each surah change (the page is reused from one surah to the next)
+	$effect(() => {
+		const list = surah.recitations;
+		let saved: string | null = null;
+		try {
+			saved = localStorage.getItem(REMEMBER);
+		} catch {
+			// private browsing: the first recitation is selected
+		}
+		recitationId = (list.find((r) => variant(r.slug) === saved) ?? list[0])?.id ?? '';
+		from = 1;
+	});
+
+	function choose(id: string) {
+		recitationId = id;
+		const chosen = surah.recitations.find((r) => r.id === id);
+		try {
+			if (chosen) localStorage.setItem(REMEMBER, variant(chosen.slug));
+		} catch {
+			// not remembered
+		}
+	}
+
+	$effect(() => {
+		const id = recitationId;
+		timings = [];
+		if (!id) return;
+		const controller = new AbortController();
+		fetch(`/api/tracks/${id}/sync`, { signal: controller.signal })
+			.then((res) => (res.ok ? res.json() : null))
+			.then((sync: { lines: Line[] } | null) => {
+				if (sync) timings = sync.lines;
+			})
+			.catch(() => {});
+		return () => controller.abort();
+	});
+
+	/** "Mahmoud Khalil Al-Husary · mujawwad": the reciter, and the style the title ends with. */
+	function recitationLabel(r: MediaItem) {
+		const style = title(r).match(/\(([^)]+)\)$/)?.[1];
+		const who = r.reciter ? name(r.reciter) : title(r);
+		return style && r.reciter ? `${who} · ${style}` : who;
+	}
 	const available = $derived(lineLanguages(surah.lines));
 	const languages = $derived(settings.visible(available));
 	const verses = $derived(surah.lines.filter((l) => l.n));
@@ -59,7 +109,7 @@
 	/** Where verse n is in the selected recitation. */
 	function timing(n: number) {
 		if (!recitation || !synced) return null;
-		const line = recitation.lines.find((l) => l.n === n);
+		const line = timings.find((l) => l.n === n);
 		return line ? { start: line.start, end: line.end } : null;
 	}
 
@@ -121,9 +171,9 @@
 		{#if surah.recitations.length}
 			<label class="recitation">
 				<span>{m.recitation_label()}</span>
-				<select bind:value={recitationId}>
+				<select value={recitationId} onchange={(e) => choose(e.currentTarget.value)}>
 					{#each surah.recitations as r (r.id)}
-						<option value={r.id}>{r.reciter ? name(r.reciter) : r.title_fr}</option>
+						<option value={r.id}>{recitationLabel(r)}</option>
 					{/each}
 				</select>
 			</label>

@@ -96,7 +96,11 @@ async function listItems(filter: string, params: Record<string, unknown> = {}, l
 		.slice(0, limit);
 }
 
-export const latest = (limit: number) => listItems('id != ""', {}, limit);
+/** Recitations imported in bulk (scripts/import-everyayah.ts), left out of "latest additions". */
+const BULK = 'EveryAyah';
+
+export const latest = (limit: number) =>
+	listItems('submitted_by != {:bulk}', { bulk: BULK }, limit);
 
 export async function categories(): Promise<Category[]> {
 	return (await client().collection('categories').getFullList({ sort: 'order,name_fr' })).map(
@@ -184,14 +188,24 @@ export async function trackSync(id: string): Promise<{ lines: Line[]; energy: nu
 
 // ——— Quran: the surahs of the text library and the recitations synced with them ———
 
-let surahCache: { at: number; list: import('#lib/quran.ts').SurahSummary[] } | null = null;
-const SURAH_CACHE_MS = 10 * 60 * 1000;
+type QuranIndex = {
+	surahs: import('#lib/quran.ts').SurahSummary[];
+	/** Reciters with at least one synced surah, with how many. */
+	reciters: (Reciter & { surahs: number })[];
+};
+let quranCache: { at: number; index: QuranIndex } | null = null;
+const QURAN_CACHE_MS = 10 * 60 * 1000;
 
 /** The 114 surahs (from the text library), with verse and recitation counts. */
-export async function surahs(): Promise<import('#lib/quran.ts').SurahSummary[]> {
-	if (surahCache && Date.now() - surahCache.at < SURAH_CACHE_MS) return surahCache.list;
+export const surahs = async () => (await quranIndex()).surahs;
+
+/** Reciters of the Quran, by name. */
+export const quranReciters = async () => (await quranIndex()).reciters;
+
+async function quranIndex(): Promise<QuranIndex> {
+	if (quranCache && Date.now() - quranCache.at < QURAN_CACHE_MS) return quranCache.index;
 	const pb = client();
-	const [texts, recitations] = await Promise.all([
+	const [texts, recitations, reciters] = await Promise.all([
 		pb.collection('texts').getFullList({
 			filter: 'slug ~ "sourate-"',
 			sort: 'slug',
@@ -199,10 +213,15 @@ export async function surahs(): Promise<import('#lib/quran.ts').SurahSummary[]> 
 		}),
 		pb
 			.collection('tracks')
-			.getFullList({ filter: `${READY} && text.slug ~ "sourate-"`, fields: 'text' })
+			.getFullList({ filter: `${READY} && text.slug ~ "sourate-"`, fields: 'text,reciter' }),
+		pb.collection('reciters').getFullList({ sort: 'name_fr' })
 	]);
 	const counts: Record<string, number> = {};
-	for (const r of recitations) counts[r.text] = (counts[r.text] ?? 0) + 1;
+	const byReciter: Record<string, number> = {};
+	for (const r of recitations) {
+		counts[r.text] = (counts[r.text] ?? 0) + 1;
+		if (r.reciter) byReciter[r.reciter] = (byReciter[r.reciter] ?? 0) + 1;
+	}
 	const list = texts.map((t) => ({
 		number: Number(String(t.slug).replace('sourate-', '')),
 		id: t.id,
@@ -211,11 +230,20 @@ export async function surahs(): Promise<import('#lib/quran.ts').SurahSummary[]> 
 		verses: (t.lines as Line[]).filter((l) => l.n).length,
 		recitations: counts[t.id] ?? 0
 	}));
-	surahCache = { at: Date.now(), list };
-	return list;
+	const index: QuranIndex = {
+		surahs: list,
+		reciters: reciters
+			.filter((r) => byReciter[r.id])
+			.map((r) => ({ ...toReciter(r), surahs: byReciter[r.id] }))
+	};
+	quranCache = { at: Date.now(), index };
+	return index;
 }
 
-/** One surah's text and its synced recitations (audio playable with the verses). */
+/**
+ * One surah's text and its synced recitations, without their lines (dozens of reciters times
+ * hundreds of verses): the page loads the timings of the one chosen.
+ */
 export async function surah(number: number) {
 	const pb = client();
 	const slug = `sourate-${String(number).padStart(3, '0')}`;
@@ -224,18 +252,22 @@ export async function surah(number: number) {
 		.getList(1, 1, { filter: pb.filter('slug = {:slug}', { slug }) });
 	const text = found.items[0];
 	if (!text) return null;
-	const recitations = await pb.collection('tracks').getFullList({
-		filter: pb.filter(`${READY} && text = {:id}`, { id: text.id }),
-		sort: '-created',
-		expand: ITEM_EXPAND,
-		fields: ITEM_FIELDS
-	});
+	const recitations = (
+		await pb.collection('tracks').getFullList({
+			filter: pb.filter(`${READY} && text = {:id}`, { id: text.id }),
+			sort: 'title_fr',
+			expand: EXPAND,
+			fields: LIST_FIELDS
+		})
+	)
+		.map(toItem)
+		.sort((a, b) => (a.reciter?.name_fr ?? '').localeCompare(b.reciter?.name_fr ?? ''));
 	return {
 		number,
 		title_fr: text.title_fr as string,
 		title_ar: text.title_ar as string,
 		source: { label: text.source as string, url: text.source_url as string },
 		lines: (text.lines ?? []) as Line[],
-		recitations: recitations.map(toItem)
+		recitations
 	};
 }

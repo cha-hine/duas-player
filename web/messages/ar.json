@@ -70,7 +70,6 @@
 	"recitations_count": "{count} تلاوة",
 	"quran_search": "ابحث عن سورة (الاسم أو الرقم)…",
 	"all_surahs": "السور المئة والأربع عشرة",
-	"quran_recitations": "التلاوات",
 	"no_recitation": "لا توجد تلاوة متزامنة لهذه السورة بعد: يمكن قراءة النص وحده.",
 	"play_surah": "استمع إلى السورة",
 	"play_from_verse": "استمع من الآية {n}",
@@ -87,5 +86,10 @@
 	"repeating_forever": "التكرار بلا توقف",
 	"previous_surah": "السورة السابقة",
 	"next_surah": "السورة التالية",
-	"recitation_label": "التلاوة"
+	"recitation_label": "التلاوة",
+	"quran_reciters": "القرّاء",
+	"surahs_count": "{count} سورة",
+	"nav_sources": "المصادر",
+	"sources_intro": "مصادر النصوص والترجمات والتلاوات في الموقع، مع الشكر لمن يتيحونها.",
+	"sources_reciters": "عرض قرّاء القرآن الكريم"
 }

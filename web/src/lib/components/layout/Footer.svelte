@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { link } from '#lib/i18n.ts';
 	import { m } from '#lib/paraglide/messages.js';
 </script>
 
 <footer class="footer">
 	<div class="container inner">
 		<p class="brand">{m.site_name()} · <span>{m.site_tagline()}</span></p>
-		<p>{m.footer_credits()}</p>
+		<p>{m.footer_credits()} · <a href={link('/sources')}>{m.nav_sources()}</a></p>
 	</div>
 </footer>
 
@@ -25,6 +26,14 @@
 		padding-block: var(--space-6);
 		/* room for the phone bottom navigation */
 		padding-bottom: calc(var(--space-6) + var(--bottom-nav-height) + env(safe-area-inset-bottom));
+	}
+
+	a {
+		color: inherit;
+	}
+
+	a:hover {
+		color: var(--color-accent-text);
 	}
 
 	.brand {
