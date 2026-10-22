@@ -172,12 +172,22 @@ async function reciterId(rc: Recitation['reciter']): Promise<string> {
 /** Sends the file through the site's chunked upload, which creates the track. */
 async function upload(file: Uint8Array<ArrayBuffer>, filename: string, data: Record<string, string | boolean>) {
 	const status = await call(`${SITE}/api/uploads`, json('POST', { filename, size: file.length, type: 'audio/mpeg' }));
-	for (let offset = 0; offset < file.length; offset += CHUNK) {
-		await call(`${SITE}/api/uploads/${status.id}`, {
-			method: 'PUT',
-			headers: { 'Upload-Offset': String(offset), 'content-type': 'application/offset+octet-stream' },
-			body: file.subarray(offset, offset + CHUNK)
-		});
+	let offset = 0;
+	for (let failures = 0; offset < file.length; ) {
+		try {
+			offset = (
+				await call(`${SITE}/api/uploads/${status.id}`, {
+					method: 'PUT',
+					headers: { 'Upload-Offset': String(offset), 'content-type': 'application/offset+octet-stream' },
+					body: file.subarray(offset, offset + CHUNK)
+				})
+			).offset;
+		} catch (e) {
+			// A cut-off chunk may be partly saved: carry on from what the server has
+			if (++failures > 5) throw e;
+			await new Promise((r) => setTimeout(r, 5000 * failures));
+			offset = (await call(`${SITE}/api/uploads/${status.id}`)).offset;
+		}
 	}
 	return call(`${SITE}/api/uploads/${status.id}/complete`, json('POST', { collection: 'tracks', data }));
 }
