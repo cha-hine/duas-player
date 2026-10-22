@@ -56,8 +56,6 @@
 	"player_theme": "الأجواء",
 	"theme_aube": "الفجر",
 	"theme_nuit": "ليل مرصّع بالنجوم",
-	"theme_ondes": "أمواج",
-	"theme_eau": "ماء",
 	"text_smaller": "تصغير النص",
 	"text_bigger": "تكبير النص",
 	"listen": "استمع",
@@ -91,5 +89,8 @@
 	"surahs_count": "{count} سورة",
 	"nav_sources": "المصادر",
 	"sources_intro": "مصادر النصوص والترجمات والتلاوات في الموقع، مع الشكر لمن يتيحونها.",
-	"sources_reciters": "عرض قرّاء القرآن الكريم"
+	"sources_reciters": "عرض قرّاء القرآن الكريم",
+	"theme_montagnes": "جبال",
+	"theme_mer": "بحر",
+	"theme_dunes": "كثبان"
 }

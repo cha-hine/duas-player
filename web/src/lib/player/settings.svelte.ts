@@ -1,8 +1,12 @@
 // Listener preferences for the immersive player, remembered on this device.
 import { TEXT_LANGUAGE_CODES, type TextLanguage } from '#lib/text-languages.ts';
 
-export const THEMES = ['aube', 'nuit', 'ondes', 'eau'] as const;
+/** Animated (WebGL) skies first, then the calm landscapes, light enough for TVs. */
+export const THEMES = ['aube', 'nuit', 'montagnes', 'mer', 'dunes'] as const;
 export type Theme = (typeof THEMES)[number];
+
+/** On a TV, unless the listener chose otherwise: a landscape, which costs the chip nothing. */
+const TV_THEME: Theme = 'montagnes';
 
 export const TEXT_SCALES = [0.85, 1, 1.2, 1.45] as const;
 
@@ -25,6 +29,7 @@ class PlayerSettings {
 
 	/** Reads saved preferences (browser only; storage may be unavailable). */
 	load() {
+		if (document.documentElement.dataset.device === 'tv') this.theme = TV_THEME;
 		try {
 			const saved: Partial<Saved> = JSON.parse(localStorage.getItem(KEY) ?? '{}');
 			if (saved.theme && THEMES.includes(saved.theme)) this.theme = saved.theme;

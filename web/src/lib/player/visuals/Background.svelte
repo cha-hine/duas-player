@@ -1,16 +1,26 @@
 <script lang="ts">
 	import type { Theme } from '../settings.svelte.ts';
+	import NatureScene, { SCENES, type Scene } from './NatureScene.svelte';
 	import { FRAGMENTS, VERTEX } from './shaders.ts';
 
-	// Animated background of the immersive player. `level` returns the voice loudness (0..1)
-	// for the current moment; it is read every frame, outside Svelte's reactivity.
+	// Animated background of the immersive player: a WebGL sky, or a calm landscape. `level`
+	// returns the voice loudness (0..1) for the current moment; it is read every frame, outside
+	// Svelte's reactivity.
 	let { theme, level }: { theme: Theme; level: () => number } = $props();
+
+	const scene = $derived((SCENES as readonly string[]).includes(theme) ? (theme as Scene) : null);
 
 	let canvas = $state<HTMLCanvasElement>();
 	let fallback = $state(false);
 
 	/** Pixels drawn per CSS pixel: the soft visuals look the same at a fraction of the cost. */
 	const RESOLUTION = 0.5;
+	/**
+	 * The skies move slowly: 30 frames a second look as smooth as 60 for half the work. TVs have
+	 * weak graphics chips for their large screens: fewer frames, fewer pixels.
+	 */
+	const FPS = 30;
+	const TV = { fps: 20, resolution: 0.3 };
 
 	function compile(gl: WebGLRenderingContext, type: number, source: string) {
 		const shader = gl.createShader(type)!;
@@ -23,7 +33,9 @@
 	}
 
 	$effect(() => {
-		if (!canvas) return;
+		const fragment = FRAGMENTS[theme];
+		if (!canvas || !fragment) return;
+		const tv = document.documentElement.dataset.device === 'tv';
 		const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 		const gl = canvas.getContext('webgl', {
 			antialias: false,
@@ -39,7 +51,7 @@
 		try {
 			program = gl.createProgram()!;
 			gl.attachShader(program, compile(gl, gl.VERTEX_SHADER, VERTEX));
-			gl.attachShader(program, compile(gl, gl.FRAGMENT_SHADER, FRAGMENTS[theme]));
+			gl.attachShader(program, compile(gl, gl.FRAGMENT_SHADER, fragment));
 			gl.linkProgram(program);
 			if (!gl.getProgramParameter(program, gl.LINK_STATUS)) throw new Error('link error');
 		} catch (error) {
@@ -63,7 +75,9 @@
 
 		let frame = 0;
 		let energy = 0;
-		let scale = RESOLUTION;
+		let scale = tv ? TV.resolution : RESOLUTION;
+		const interval = 1000 / (tv ? TV.fps : FPS);
+		let drawn = 0;
 		let slowFrames = 0;
 		let last = performance.now();
 		const start = last;
@@ -79,11 +93,16 @@
 		};
 
 		const draw = (now: number) => {
+			if (now - drawn < interval - 2 && !reduceMotion) {
+				frame = requestAnimationFrame(draw);
+				return;
+			}
+			drawn = now;
 			// Weak device: if frames keep taking too long, draw at a lower resolution
 			const spent = now - last;
 			last = now;
-			slowFrames = spent > 45 ? slowFrames + 1 : Math.max(0, slowFrames - 1);
-			if (slowFrames > 30 && scale > 0.25) {
+			slowFrames = spent > interval * 1.6 ? slowFrames + 1 : Math.max(0, slowFrames - 1);
+			if (slowFrames > 20 && scale > 0.2) {
 				scale /= 1.5;
 				slowFrames = 0;
 			}
@@ -107,7 +126,9 @@
 	});
 </script>
 
-{#if fallback}
+{#if scene}
+	<NatureScene {scene} {level} />
+{:else if fallback}
 	<div class="fallback" aria-hidden="true"></div>
 {:else}
 	<canvas bind:this={canvas} aria-hidden="true"></canvas>

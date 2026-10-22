@@ -25,8 +25,9 @@
 	const THEME_LABELS: Record<Theme, () => string> = {
 		aube: m.theme_aube,
 		nuit: m.theme_nuit,
-		ondes: m.theme_ondes,
-		eau: m.theme_eau
+		montagnes: m.theme_montagnes,
+		mer: m.theme_mer,
+		dunes: m.theme_dunes
 	};
 	const REPEAT_LABELS = {
 		off: m.player_repeat_off,
@@ -338,15 +339,22 @@
 			radial-gradient(circle at 30% 30%, #fff 0 2px, transparent 3px), var(--sakina-night);
 	}
 
-	.ondes {
-		background: repeating-radial-gradient(
-			circle,
-			var(--sakina-gold) 0 2px,
-			var(--sakina-deep) 3px 7px
-		);
+	/* Landscapes: horizon and light */
+	.montagnes {
+		background:
+			linear-gradient(160deg, transparent 55%, #1f2f47 56%),
+			linear-gradient(20deg, transparent 50%, #34405a 51%), linear-gradient(#16304a, #8a6a45);
 	}
 
-	.eau {
-		background: linear-gradient(135deg, var(--sakina-emerald), var(--sakina-night));
+	.mer {
+		background:
+			radial-gradient(circle at 68% 30%, #f4efe3 0 3px, transparent 4px),
+			linear-gradient(transparent 58%, #173451 59%), linear-gradient(#081526, #22405c);
+	}
+
+	.dunes {
+		background:
+			radial-gradient(ellipse 90% 40% at 30% 100%, #3a2b36 60%, transparent 61%),
+			linear-gradient(#1d2b48, #b98a52);
 	}
 </style>

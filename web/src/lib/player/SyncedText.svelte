@@ -17,12 +17,16 @@
 	$effect(() => {
 		let frame = 0;
 		let glow = 0;
+		// On a TV, the large text would be redrawn every frame to glow: it stays still there
+		const breathe = document.documentElement.dataset.device !== 'tv';
 		const tick = () => {
 			time = player.time;
-			// Rise with the voice, fall back gently; written straight to CSS, no re-render
-			const target = energyAt(player.energy, time);
-			glow += (target - glow) * (target > glow ? 0.2 : 0.05);
-			box?.style.setProperty('--energy', glow.toFixed(3));
+			if (breathe) {
+				// Rise with the voice, fall back gently; written straight to CSS, no re-render
+				const target = energyAt(player.energy, time);
+				glow += (target - glow) * (target > glow ? 0.2 : 0.05);
+				box?.style.setProperty('--energy', glow.toFixed(3));
+			}
 			frame = requestAnimationFrame(tick);
 		};
 		frame = requestAnimationFrame(tick);
@@ -160,6 +164,26 @@
 		max-width: 40rem;
 		color: rgb(244 239 227 / 0.4);
 		font-size: calc(1rem * var(--scale));
+	}
+
+	/* TVs: words fade in without blur (costly on their graphics chips), the line stays still */
+	:global([data-device='tv']) .word {
+		animation-name: word-in-plain;
+	}
+
+	:global([data-device='tv']) .primary {
+		transition: none;
+	}
+
+	@keyframes word-in-plain {
+		from {
+			opacity: 0;
+			transform: translateY(0.4em);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
 	}
 
 	@media (prefers-reduced-motion: reduce) {

@@ -56,8 +56,6 @@
 	"player_theme": "Ambiance",
 	"theme_aube": "Aube",
 	"theme_nuit": "Nuit étoilée",
-	"theme_ondes": "Ondes",
-	"theme_eau": "Eau",
 	"text_smaller": "Texte plus petit",
 	"text_bigger": "Texte plus grand",
 	"listen": "Écouter",
@@ -91,5 +89,8 @@
 	"surahs_count": "{count} sourate(s)",
 	"nav_sources": "Sources",
 	"sources_intro": "D’où viennent les textes, les traductions et les récitations du site. Merci à celles et ceux qui les partagent.",
-	"sources_reciters": "Voir les récitateurs du Coran"
+	"sources_reciters": "Voir les récitateurs du Coran",
+	"theme_montagnes": "Montagnes",
+	"theme_mer": "Mer",
+	"theme_dunes": "Dunes"
 }

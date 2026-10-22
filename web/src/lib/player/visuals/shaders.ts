@@ -83,43 +83,8 @@ void main() {
 }
 `;
 
-// Ripples: soft golden rings spreading from the centre, wider and brighter with the voice
-const ONDES = `
-void main() {
-	vec2 p = centered();
-	float r = length(p);
-	float t = u_time * 0.6;
-	float rings = sin(r * 22.0 - t * 2.0 + fbm(p * 2.0) * 2.0);
-	float line = smoothstep(0.75, 1.0, rings) * exp(-r * 1.6);
-	vec3 col = mix(DEEP, NIGHT, smoothstep(0.0, 1.2, r));
-	col += GOLD * line * (0.25 + 0.75 * u_energy);
-	col += EMERALD * 0.08 * (1.0 - r);
-	gl_FragColor = vec4(col, 1.0);
-}
-`;
-
-// Water: light dancing on deep water, livelier with the voice
-const EAU = `
-void main() {
-	vec2 p = centered() * 3.0;
-	float t = u_time * (0.25 + 0.25 * u_energy);
-	vec2 q = p;
-	float w = 0.0;
-	for (int k = 0; k < 5; k++) {
-		float fk = float(k);
-		q += vec2(sin(q.y * 1.3 + t * (1.0 + fk * 0.3) + fk), cos(q.x * 1.1 - t * (0.8 + fk * 0.2) + fk * 1.7)) * 0.35;
-		w += sin(q.x + q.y);
-	}
-	float caustic = pow(abs(sin(w * 0.5)), 6.0);
-	vec3 col = mix(NIGHT, mix(DEEP, EMERALD, 0.35), smoothstep(-1.5, 1.5, p.y));
-	col += mix(EMERALD, GOLD, 0.4 + 0.4 * u_energy) * caustic * (0.25 + 0.5 * u_energy);
-	gl_FragColor = vec4(col, 1.0);
-}
-`;
-
-export const FRAGMENTS: Record<Theme, string> = {
+/** The themes drawn by a shader; the others are landscapes (NatureScene.svelte). */
+export const FRAGMENTS: Partial<Record<Theme, string>> = {
 	aube: COMMON + AUBE,
-	nuit: COMMON + NUIT,
-	ondes: COMMON + ONDES,
-	eau: COMMON + EAU
+	nuit: COMMON + NUIT
 };
