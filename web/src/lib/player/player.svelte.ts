@@ -23,6 +23,9 @@ class Player {
 	lines = $state<Line[]>([]);
 	energy = $state<number[]>([]);
 
+	/** A passage being repeated (memorisation): played `remaining` more times, Infinity = loop. */
+	loop = $state<{ start: number; end: number; remaining: number; total: number } | null>(null);
+
 	current = $derived(this.queue[this.index] ?? null);
 	hasNext = $derived(this.repeat === 'all' || this.shuffle || this.index < this.queue.length - 1);
 
@@ -114,6 +117,25 @@ class Player {
 		}
 	}
 
+	/** Plays [start, end] of `item` `times` times (Infinity: until stopped). */
+	repeatPassage(items: MediaItem[], item: MediaItem, start: number, end: number, times: number) {
+		this.playFrom(items, item, start);
+		this.loop = { start, end, remaining: times, total: times };
+	}
+
+	/** Called every frame while a passage repeats: jumps back, or lets the recitation go on. */
+	checkLoop() {
+		const loop = this.loop;
+		if (!loop || this.time < loop.end - 0.05) return;
+		if (loop.remaining > 1) {
+			this.loop = { ...loop, remaining: loop.remaining - 1 };
+			this.seek(loop.start);
+		} else {
+			this.loop = null;
+			this.paused = true;
+		}
+	}
+
 	cycleRepeat() {
 		this.repeat = this.repeat === 'off' ? 'all' : this.repeat === 'all' ? 'one' : 'off';
 	}
@@ -131,6 +153,7 @@ class Player {
 
 	#go(index: number) {
 		this.index = index;
+		this.loop = null;
 		const item = this.queue[index];
 		this.lines = item?.lines ?? [];
 		this.energy = [];

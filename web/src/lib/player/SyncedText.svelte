@@ -2,6 +2,7 @@
 	import { fade } from 'svelte/transition';
 	import { name } from '#lib/media.ts';
 	import { isSynced, lineLanguages, TEXT_LANGUAGES } from '#lib/text-languages.ts';
+	import { verseMark } from '#lib/quran.ts';
 	import { player } from './player.svelte.ts';
 	import { settings } from './settings.svelte.ts';
 	import { energyAt, lineAt } from './sync.ts';
@@ -56,6 +57,11 @@
 						{#each words(line[code] ?? '') as word, i (i)}
 							<span class="word" style:--i={i}>{word}</span>
 						{/each}
+						{#if code === 'ar' && line.n}
+							<span class="word mark" style:--i={words(line.ar ?? '').length}
+								>{verseMark(line.n)}</span
+							>
+						{/if}
 					</p>
 				{/each}
 			{:else if item}
@@ -139,6 +145,10 @@
 			transform: none;
 			filter: none;
 		}
+	}
+
+	.word.mark {
+		color: var(--sakina-gold);
 	}
 
 	.reciter {

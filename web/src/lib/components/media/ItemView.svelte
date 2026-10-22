@@ -14,6 +14,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { player } from '#lib/player/player.svelte.ts';
 	import { lineAt } from '#lib/player/sync.ts';
+	import { verseMark } from '#lib/quran.ts';
 	import { isSynced, lineLanguages, TEXT_LANGUAGES } from '#lib/text-languages.ts';
 	import AudioPlayer from './AudioPlayer.svelte';
 	import MediaGrid from './MediaGrid.svelte';
@@ -89,7 +90,8 @@
 								lang={TEXT_LANGUAGES[code].lang}
 								dir={TEXT_LANGUAGES[code].dir}
 								style:font-family={code === 'ar' ? undefined : TEXT_LANGUAGES[code].font}
-								>{line[code]}</span
+								>{line[code]}{#if code === 'ar' && line.n}
+									<span class="mark">{verseMark(line.n)}</span>{/if}</span
 							>
 						{/if}
 					{/each}
@@ -177,6 +179,11 @@
 		display: grid;
 		gap: var(--space-4);
 		max-width: 48rem;
+	}
+
+	.mark {
+		color: var(--color-accent-text);
+		margin-inline-start: 0.25em;
 	}
 
 	.credit {

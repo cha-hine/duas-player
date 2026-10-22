@@ -80,6 +80,20 @@ async function spreadsheet(path: string, keys: string[]): Promise<Map<string, Ve
 	return out;
 }
 
+/** Arabic letters only (no vowel marks or Quranic signs), to compare words. */
+const bare = (word: string) => word.replace(/[\u0610-\u061a\u064b-\u065f\u0670\u06d6-\u06ed]/g, '');
+const BASMALA = ['بسم', 'ٱلله', 'ٱلرحمن', 'ٱلرحيم'];
+
+/**
+ * Tanzil's text files start verse 1 of every surah but 1 and 9 with the basmala (its XML keeps it
+ * apart); here it is a line of its own, so it is taken off the verse. Some surahs write it with a
+ * shadda ("بِّسْمِ"), hence the comparison without vowel marks.
+ */
+function withoutBasmala(verse: string): string {
+	const words = verse.split(' ');
+	return BASMALA.every((w, i) => bare(words[i] ?? '') === w) ? words.slice(4).join(' ') : verse;
+}
+
 const titleCase = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s);
 
 console.log('Downloading the Tanzil Uthmani text...');
@@ -138,7 +152,10 @@ const source = [
 for (let sura = 1; sura <= 114; sura++) {
 	/** One line: verse `aya` of the spreadsheet with the Tanzil verse `key` ("sura|aya"). */
 	const line = (aya: string, key: string) => {
-		const out: Record<string, string | number> = { ar: arabic.verses.get(key) ?? '' };
+		const ar = arabic.verses.get(key) ?? '';
+		const out: Record<string, string | number> = {
+			ar: aya === '1' && !NO_BASMALA.has(sura) ? withoutBasmala(ar) : ar
+		};
 		// Verse number (the basmala line, aya 0.5, has none)
 		if (Number.isInteger(Number(aya))) out.n = Number(aya);
 		const tl = translit?.get(`${sura}|${aya}`);

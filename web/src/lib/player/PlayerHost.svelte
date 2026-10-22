@@ -92,6 +92,18 @@
 		}
 	});
 
+	// A repeated passage is watched every frame, so it loops at the end of the verse, not after
+	$effect(() => {
+		if (!player.loop || player.paused) return;
+		let frame = 0;
+		const tick = () => {
+			player.checkLoop();
+			frame = requestAnimationFrame(tick);
+		};
+		frame = requestAnimationFrame(tick);
+		return () => cancelAnimationFrame(frame);
+	});
+
 	// Media keys on keyboards and TV remotes
 	function onkeydown(event: KeyboardEvent) {
 		if (!player.current) return;

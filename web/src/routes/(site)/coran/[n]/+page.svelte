@@ -1,0 +1,453 @@
+<script lang="ts">
+	import AArrowDown from '@lucide/svelte/icons/a-arrow-down';
+	import AArrowUp from '@lucide/svelte/icons/a-arrow-up';
+	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Pause from '@lucide/svelte/icons/pause';
+	import Play from '@lucide/svelte/icons/play';
+	import Repeat from '@lucide/svelte/icons/repeat';
+	import Seo from '#lib/components/Seo.svelte';
+	import Button from '#lib/components/ui/Button.svelte';
+	import IconButton from '#lib/components/ui/IconButton.svelte';
+	import { link } from '#lib/i18n.ts';
+	import { name } from '#lib/media.ts';
+	import { m } from '#lib/paraglide/messages.js';
+	import { getLocale } from '#lib/paraglide/runtime.js';
+	import { player } from '#lib/player/player.svelte.ts';
+	import { settings } from '#lib/player/settings.svelte.ts';
+	import { lineAt } from '#lib/player/sync.ts';
+	import { arabicNumber, verseMark } from '#lib/quran.ts';
+	import { isSynced, lineLanguages, TEXT_LANGUAGES } from '#lib/text-languages.ts';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
+
+	const REPEATS = [1, 3, 5, 10, Infinity];
+
+	const surah = $derived(data.surah);
+	// svelte-ignore state_referenced_locally
+	let recitationId = $state(data.surah.recitations[0]?.id ?? '');
+	let times = $state(3);
+	let from = $state(1);
+	let follow = $state(true);
+
+	const recitation = $derived(surah.recitations.find((r) => r.id === recitationId) ?? null);
+	const synced = $derived(!!recitation && isSynced(recitation.lines));
+	const available = $derived(lineLanguages(surah.lines));
+	const languages = $derived(settings.visible(available));
+	const verses = $derived(surah.lines.filter((l) => l.n));
+	/** End of the memorisation range: the last verse until the reader changes it. */
+	let to = $derived(verses.length);
+	const basmala = $derived(surah.lines.find((l) => !l.n) ?? null);
+	const playing = $derived(!!recitation && player.isCurrent(recitation));
+	const isArabic = getLocale() === 'ar';
+
+	/** The verse being recited, when this surah's recitation is the one playing. */
+	const currentVerse = $derived.by(() => {
+		if (!playing) return 0;
+		const i = lineAt(player.lines, player.currentTime + 0.15);
+		return i >= 0 ? (player.lines[i].n ?? 0) : 0;
+	});
+
+	$effect(() => {
+		if (!follow || !currentVerse) return;
+		document
+			.getElementById(`v${currentVerse}`)
+			?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+	});
+
+	/** Where verse n is in the selected recitation. */
+	function timing(n: number) {
+		if (!recitation || !synced) return null;
+		const line = recitation.lines.find((l) => l.n === n);
+		return line ? { start: line.start, end: line.end } : null;
+	}
+
+	function playSurah() {
+		if (!recitation) return;
+		if (playing) player.toggle();
+		else player.playItems([recitation], recitation);
+	}
+
+	function playFrom(n: number) {
+		const t = timing(n);
+		if (t && recitation) player.playFrom([recitation], recitation, t.start);
+	}
+
+	function repeat(first: number, last: number) {
+		const a = timing(first);
+		const b = timing(Math.max(first, last));
+		if (a && b && recitation) player.repeatPassage([recitation], recitation, a.start, b.end, times);
+	}
+
+	const number = (n: number) => (isArabic ? arabicNumber(n) : String(n));
+	const frenchName = (title: string) => title.replace(/^Sourate \d+ — /, '');
+	const repeatLabel = (n: number) => (n === Infinity ? m.repeat_forever() : `×${n}`);
+</script>
+
+<Seo
+	title={`${m.surah_label({ n: surah.number })} · ${frenchName(surah.title_fr)}`}
+	description={`${surah.title_ar} — ${m.verses_count({ count: verses.length })}`}
+/>
+
+<div class="container page">
+	<header>
+		<p class="label">
+			{m.surah_label({ n: number(surah.number) })} · {m.verses_count({ count: verses.length })}
+		</p>
+		<h1 lang="ar" dir="rtl">{surah.title_ar}</h1>
+		<p class="fr">{frenchName(surah.title_fr)}</p>
+		<nav class="neighbours">
+			{#if data.previous}
+				<a href={link(`/coran/${data.previous.number}`)}>
+					{#if isArabic}<ArrowRight aria-hidden="true" />{:else}<ArrowLeft
+							aria-hidden="true"
+						/>{/if}
+					{m.previous_surah()}
+				</a>
+			{/if}
+			{#if data.next}
+				<a href={link(`/coran/${data.next.number}`)}>
+					{m.next_surah()}
+					{#if isArabic}<ArrowLeft aria-hidden="true" />{:else}<ArrowRight
+							aria-hidden="true"
+						/>{/if}
+				</a>
+			{/if}
+		</nav>
+	</header>
+
+	<section class="toolbar">
+		{#if surah.recitations.length}
+			<label class="recitation">
+				<span>{m.recitation_label()}</span>
+				<select bind:value={recitationId}>
+					{#each surah.recitations as r (r.id)}
+						<option value={r.id}>{r.reciter ? name(r.reciter) : r.title_fr}</option>
+					{/each}
+				</select>
+			</label>
+			<Button onclick={playSurah}>
+				{#snippet icon()}{#if playing && !player.paused}<Pause />{:else}<Play />{/if}{/snippet}
+				{playing && !player.paused ? m.player_pause() : m.play_surah()}
+			</Button>
+		{:else}
+			<p class="note">{m.no_recitation()}</p>
+		{/if}
+		<div class="display">
+			{#each available as code (code)}
+				<button
+					type="button"
+					class="pill"
+					lang={TEXT_LANGUAGES[code].lang}
+					aria-pressed={!settings.hidden.includes(code)}
+					title={TEXT_LANGUAGES[code].native}
+					onclick={() => settings.toggleLanguage(code, available)}
+					>{TEXT_LANGUAGES[code].short}</button
+				>
+			{/each}
+			<IconButton label={m.text_smaller()} onclick={() => settings.resizeText(-1)}
+				><AArrowDown /></IconButton
+			>
+			<IconButton label={m.text_bigger()} onclick={() => settings.resizeText(1)}
+				><AArrowUp /></IconButton
+			>
+		</div>
+	</section>
+
+	{#if synced}
+		<section class="memorize">
+			<strong>{m.memorize_title()}</strong>
+			<label>
+				{m.repeat_times()}
+				<select bind:value={times}>
+					{#each REPEATS as r (r)}<option value={r}>{repeatLabel(r)}</option>{/each}
+				</select>
+			</label>
+			<label>
+				{m.memorize_range()}
+				{m.from_verse()}
+				<input type="number" min="1" max={verses.length} bind:value={from} />
+				{m.to_verse()}
+				<input type="number" min={from} max={verses.length} bind:value={to} />
+			</label>
+			<Button variant="secondary" onclick={() => repeat(from, to)}>
+				{#snippet icon()}<Repeat />{/snippet}
+				{m.memorize_range()}
+			</Button>
+			{#if playing && player.loop}
+				{@const loop = player.loop}
+				<span class="looping">
+					{loop.total === Infinity
+						? m.repeating_forever()
+						: m.repeating({
+								n: number(loop.total - loop.remaining + 1),
+								total: number(loop.total)
+							})}
+				</span>
+				<Button variant="ghost" onclick={() => (player.loop = null)}>{m.stop_repeat()}</Button>
+			{/if}
+			<label class="follow">
+				<input type="checkbox" bind:checked={follow} />
+				{m.follow_reading()}
+			</label>
+		</section>
+	{/if}
+
+	<div class="text" style:--scale={settings.textScale}>
+		{#if basmala && languages.includes('ar')}
+			<p class="basmala" lang="ar" dir="rtl">{basmala.ar}</p>
+		{/if}
+		{#each verses as verse (verse.n)}
+			{@const n = verse.n!}
+			<article id="v{n}" class="verse" class:current={n === currentVerse}>
+				{#each languages as code (code)}
+					{#if verse[code]}
+						{#if code === 'ar'}
+							<p class="ar" lang="ar" dir="rtl">
+								{verse.ar}
+								<span class="mark">{verseMark(n)}</span>
+							</p>
+						{:else}
+							<p
+								class="translation"
+								lang={TEXT_LANGUAGES[code].lang}
+								dir={TEXT_LANGUAGES[code].dir}
+								style:font-family={TEXT_LANGUAGES[code].font}
+							>
+								<span class="n">{n}.</span>
+								{verse[code]}
+							</p>
+						{/if}
+					{/if}
+				{/each}
+				{#if synced}
+					<div class="actions">
+						<IconButton label={m.play_from_verse({ n })} onclick={() => playFrom(n)}
+							><Play /></IconButton
+						>
+						<IconButton label={m.repeat_verse({ n })} onclick={() => repeat(n, n)}
+							><Repeat /></IconButton
+						>
+					</div>
+				{/if}
+			</article>
+		{/each}
+	</div>
+
+	{#if surah.source.label}
+		<p class="credit">
+			{m.text_source()}
+			{#if surah.source.url}
+				<a href={surah.source.url} target="_blank" rel="noopener">{surah.source.label}</a>
+			{:else}
+				{surah.source.label}
+			{/if}
+		</p>
+	{/if}
+</div>
+
+<style>
+	.page {
+		display: grid;
+		gap: var(--space-5);
+		padding-block: var(--space-6);
+	}
+
+	header {
+		display: grid;
+		justify-items: center;
+		gap: var(--space-2);
+		text-align: center;
+	}
+
+	.label {
+		color: var(--color-accent-text);
+		font-weight: 600;
+		font-size: var(--text-sm);
+	}
+
+	h1 {
+		font-family: var(--font-quran);
+		font-size: clamp(2.2rem, 6vw, 3.4rem);
+		font-weight: 400;
+		line-height: 1.6;
+	}
+
+	.fr {
+		color: var(--color-text-muted);
+		font-size: var(--text-lg);
+	}
+
+	.neighbours {
+		display: flex;
+		gap: var(--space-5);
+		margin-top: var(--space-2);
+	}
+
+	.neighbours a {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
+		color: var(--color-text-muted);
+		font-size: var(--text-sm);
+		text-decoration: none;
+	}
+
+	.neighbours a:hover {
+		color: var(--color-accent-text);
+	}
+
+	.neighbours :global(svg) {
+		width: 16px;
+		height: 16px;
+	}
+
+	.toolbar,
+	.memorize {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-3);
+		padding: var(--space-3) var(--space-4);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: var(--color-surface);
+	}
+
+	.toolbar :global(svg),
+	.memorize :global(svg) {
+		width: 18px;
+		height: 18px;
+	}
+
+	label {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		font-size: var(--text-sm);
+	}
+
+	select,
+	input[type='number'] {
+		min-height: 38px;
+		padding: 0 var(--space-2);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		background: var(--color-bg);
+	}
+
+	input[type='number'] {
+		width: 4.5rem;
+	}
+
+	.note {
+		color: var(--color-text-muted);
+	}
+
+	.display {
+		display: flex;
+		align-items: center;
+		gap: var(--space-1);
+		margin-inline-start: auto;
+	}
+
+	.pill {
+		min-width: 40px;
+		height: 34px;
+		padding: 0 var(--space-2);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		background: none;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	.pill[aria-pressed='false'] {
+		opacity: 0.45;
+	}
+
+	.looping {
+		color: var(--color-secondary-text);
+		font-weight: 600;
+		font-size: var(--text-sm);
+	}
+
+	.follow {
+		margin-inline-start: auto;
+	}
+
+	.text {
+		display: grid;
+		gap: var(--space-2);
+		max-width: 64rem;
+		width: 100%;
+		margin-inline: auto;
+	}
+
+	.basmala {
+		font-family: var(--font-quran);
+		font-size: calc(2rem * var(--scale));
+		text-align: center;
+		color: var(--color-accent-text);
+		padding-block: var(--space-4);
+	}
+
+	.verse {
+		display: grid;
+		gap: var(--space-2);
+		padding: var(--space-4);
+		border-radius: var(--radius-md);
+		border-bottom: 1px solid var(--color-border);
+		transition: background-color 400ms var(--ease);
+		scroll-margin-top: calc(var(--header-height) + var(--space-6));
+	}
+
+	.verse.current {
+		background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+	}
+
+	.ar {
+		font-family: var(--font-quran);
+		font-size: calc(clamp(1.6rem, 3.2vw, 2.1rem) * var(--scale));
+		line-height: 2.2;
+		text-align: right;
+	}
+
+	.mark {
+		color: var(--color-accent-text);
+		white-space: nowrap;
+	}
+
+	.translation {
+		color: var(--color-text-muted);
+		font-size: calc(1.05rem * var(--scale));
+		text-align: start;
+	}
+
+	.n {
+		color: var(--color-accent-text);
+		font-weight: 600;
+		font-family: var(--font-latin);
+	}
+
+	.actions {
+		display: flex;
+		gap: var(--space-1);
+	}
+
+	.actions :global(svg) {
+		width: 18px;
+		height: 18px;
+	}
+
+	.credit {
+		color: var(--color-text-muted);
+		font-size: var(--text-xs);
+		text-align: center;
+	}
+
+	.credit a {
+		color: inherit;
+	}
+</style>
