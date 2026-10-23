@@ -1,7 +1,8 @@
 // Media worker: picks up tracks and videos with status "pending" and processes them
 // with ffmpeg, a few at a time. PocketBase hooks (pb/pb_hooks/media.pb.js) set "pending"
-// when a file is uploaded or replaced; setting it by hand reprocesses a record. Media sent by
-// people go first; recitations imported in bulk (thousands, playable meanwhile) after.
+// when a file is uploaded or replaced; setting it by hand reprocesses a record. Recitations
+// imported in bulk are left alone: they play as they are, and a normalised copy of thousands
+// of them would double the disk space they take.
 import { mkdtemp, rm } from 'node:fs/promises';
 import { cpus, tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -54,13 +55,11 @@ async function requeueInterrupted() {
 }
 
 async function nextJob(): Promise<MediaRecord | undefined> {
-	for (const also of [NOT_BULK, '']) {
-		for (const collection of COLLECTIONS) {
-			const record = (await listByStatus(collection, 'pending', also)).find((r) => !claimed.has(r.id));
-			if (record) {
-				claimed.add(record.id);
-				return record;
-			}
+	for (const collection of COLLECTIONS) {
+		const record = (await listByStatus(collection, 'pending', NOT_BULK)).find((r) => !claimed.has(r.id));
+		if (record) {
+			claimed.add(record.id);
+			return record;
 		}
 	}
 }
