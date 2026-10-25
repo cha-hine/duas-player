@@ -201,16 +201,15 @@ async function quranIndex(): Promise<QuranIndex> {
 			sort: 'slug',
 			fields: 'id,slug,title_fr,title_ar,lines'
 		}),
-		pb
-			.collection('tracks')
-			.getFullList({ filter: `${READY} && text.slug ~ "sourate-"`, fields: 'text,reciter' }),
+		// Counted by the database: listing the tracks themselves loads their lines too (~37 s)
+		pb.collection('quran_recitation_counts').getFullList({ fields: 'text,reciter,n' }),
 		pb.collection('reciters').getFullList({ sort: 'name_fr' })
 	]);
 	const counts: Record<string, number> = {};
 	const byReciter: Record<string, number> = {};
 	for (const r of recitations) {
-		counts[r.text] = (counts[r.text] ?? 0) + 1;
-		if (r.reciter) byReciter[r.reciter] = (byReciter[r.reciter] ?? 0) + 1;
+		counts[r.text] = (counts[r.text] ?? 0) + r.n;
+		if (r.reciter) byReciter[r.reciter] = (byReciter[r.reciter] ?? 0) + r.n;
 	}
 	const list = texts.map((t) => ({
 		number: Number(String(t.slug).replace('sourate-', '')),
