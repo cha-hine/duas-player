@@ -116,14 +116,23 @@ export async function categories(): Promise<Category[]> {
 	);
 }
 
-/** Number of ready items per category id. */
+/** Number of ready items per category id. Counted by the database (one tiny page per category):
+ *  listing every track to count them took ~30 s once the bulk recitations were imported. */
 export async function categoryCounts(): Promise<Record<string, number>> {
 	const pb = client();
+	const ids = (await pb.collection('categories').getFullList({ fields: 'id' })).map((r) => r.id);
 	const counts: Record<string, number> = {};
-	for (const c of COLLECTIONS) {
-		const rows = await pb.collection(c).getFullList({ filter: READY, fields: 'category' });
-		for (const row of rows) counts[row.category] = (counts[row.category] ?? 0) + 1;
-	}
+	await Promise.all(
+		ids.flatMap((id) =>
+			COLLECTIONS.map(async (c) => {
+				const page = await pb.collection(c).getList(1, 1, {
+					filter: pb.filter(`${READY} && category = {:id}`, { id }),
+					fields: 'id'
+				});
+				if (page.totalItems) counts[id] = (counts[id] ?? 0) + page.totalItems;
+			})
+		)
+	);
 	return counts;
 }
 
