@@ -11,7 +11,9 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter()
+			adapter: adapter(),
+			// All CSS in the page itself: no stylesheet to wait for before the first paint (mobile PageSpeed)
+			inlineStyleThreshold: Infinity
 		}),
 
 		paraglideVitePlugin({
