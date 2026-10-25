@@ -30,7 +30,7 @@
 	<SectionTitle title={m.categories_title()} href={link('/bibliotheque')} />
 	<div class="categories">
 		{#each data.categories as category (category.id)}
-			<CategoryCard {category} count={data.counts[category.id] ?? 0} />
+			<CategoryCard {category} />
 		{/each}
 	</div>
 </section>

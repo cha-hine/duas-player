@@ -14,7 +14,7 @@
 	<p>{m.library_intro()}</p>
 	<div class="categories">
 		{#each data.categories as category (category.id)}
-			<CategoryCard {category} count={data.counts[category.id] ?? 0} />
+			<CategoryCard {category} />
 		{/each}
 	</div>
 </div>

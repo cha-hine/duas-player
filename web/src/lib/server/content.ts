@@ -8,7 +8,7 @@ import { PB_URL } from './pocketbase.ts';
 
 type Collection = 'tracks' | 'videos';
 const COLLECTIONS: Collection[] = ['tracks', 'videos'];
-/** Recitations imported in bulk (scripts/import-everyayah.ts): left out of "latest additions". */
+/** Recitations imported in bulk (scripts/import-everyayah.ts). */
 const BULK = ['EveryAyah', 'Le-Coran.com'];
 const FROM_BULK = BULK.map((name) => `submitted_by = "${name}"`).join(' || ');
 /**
@@ -103,37 +103,10 @@ async function listItems(filter: string, params: Record<string, unknown> = {}, l
 		.slice(0, limit);
 }
 
-export const latest = (limit: number) =>
-	listItems(
-		BULK.map((_, i) => `submitted_by != {:bulk${i}}`).join(' && '),
-		Object.fromEntries(BULK.map((name, i) => [`bulk${i}`, name])),
-		limit
-	);
-
 export async function categories(): Promise<Category[]> {
 	return (await client().collection('categories').getFullList({ sort: 'order,name_fr' })).map(
 		toCategory
 	);
-}
-
-/** Number of ready items per category id. Counted by the database (one tiny page per category):
- *  listing every track to count them took ~30 s once the bulk recitations were imported. */
-export async function categoryCounts(): Promise<Record<string, number>> {
-	const pb = client();
-	const ids = (await pb.collection('categories').getFullList({ fields: 'id' })).map((r) => r.id);
-	const counts: Record<string, number> = {};
-	await Promise.all(
-		ids.flatMap((id) =>
-			COLLECTIONS.map(async (c) => {
-				const page = await pb.collection(c).getList(1, 1, {
-					filter: pb.filter(`${READY} && category = {:id}`, { id }),
-					fields: 'id'
-				});
-				if (page.totalItems) counts[id] = (counts[id] ?? 0) + page.totalItems;
-			})
-		)
-	);
-	return counts;
 }
 
 export async function category(slug: string): Promise<Category | null> {

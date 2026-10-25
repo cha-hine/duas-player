@@ -2,9 +2,8 @@
 	import { link } from '#lib/i18n.ts';
 	import { categoryIcon } from '#lib/icons.ts';
 	import { localized, name, type Category } from '#lib/media.ts';
-	import { m } from '#lib/paraglide/messages.js';
 
-	let { category, count }: { category: Category; count?: number } = $props();
+	let { category }: { category: Category } = $props();
 
 	const Icon = $derived(categoryIcon(category.icon));
 </script>
@@ -17,7 +16,6 @@
 			<small>{localized(category.description_fr, category.description_ar)}</small>
 		{/if}
 	</span>
-	{#if count !== undefined}<span class="count">{m.items_count({ count })}</span>{/if}
 </a>
 
 <style>
@@ -69,11 +67,5 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-	}
-
-	.count {
-		grid-column: 2;
-		color: var(--color-text-muted);
-		font-size: var(--text-xs);
 	}
 </style>
