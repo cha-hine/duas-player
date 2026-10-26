@@ -127,7 +127,7 @@
 			followed = slug;
 			// link() resolves the path itself, in the interface language
 			// eslint-disable-next-line svelte/no-navigation-without-resolve
-			void goto(link(`/coran/${now.number}`));
+			void goto(link(`/quran/${now.number}`));
 		}
 	});
 	const isArabic = getLocale() === 'ar';
@@ -189,7 +189,7 @@
 		<p class="fr">{frenchName(surah.title_fr)}</p>
 		<nav class="neighbours">
 			{#if data.previous}
-				<a href={link(`/coran/${data.previous.number}`)}>
+				<a href={link(`/quran/${data.previous.number}`)}>
 					{#if isArabic}<ArrowRight aria-hidden="true" />{:else}<ArrowLeft
 							aria-hidden="true"
 						/>{/if}
@@ -197,7 +197,7 @@
 				</a>
 			{/if}
 			{#if data.next}
-				<a href={link(`/coran/${data.next.number}`)}>
+				<a href={link(`/quran/${data.next.number}`)}>
 					{m.next_surah()}
 					{#if isArabic}<ArrowLeft aria-hidden="true" />{:else}<ArrowRight
 							aria-hidden="true"

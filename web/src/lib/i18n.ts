@@ -7,7 +7,7 @@ import { localizeHref } from '#lib/paraglide/runtime.js';
  */
 export const resolvePath = resolve as (path: string) => string;
 
-/** Link to a page in the current language, e.g. link('/coran') -> '/ar/coran' in Arabic. */
+/** Link to a page in the current language, e.g. link('/quran') -> '/ar/quran' in Arabic. */
 export function link(path: string): string {
 	return resolvePath(localizeHref(path));
 }

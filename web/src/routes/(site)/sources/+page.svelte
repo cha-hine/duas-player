@@ -11,7 +11,7 @@
 
 	const SECTIONS: Section[] = [
 		{
-			fr: 'Texte du Coran',
+			fr: 'Texte du Quran',
 			ar: 'نص القرآن الكريم',
 			sources: [
 				{
@@ -23,7 +23,7 @@
 			]
 		},
 		{
-			fr: 'Traductions du Coran',
+			fr: 'Traductions du Quran',
 			ar: 'ترجمات القرآن الكريم',
 			sources: [
 				{
@@ -45,7 +45,7 @@
 			]
 		},
 		{
-			fr: 'Récitations du Coran',
+			fr: 'Récitations du Quran',
 			ar: 'تلاوات القرآن الكريم',
 			sources: [
 				{
@@ -57,7 +57,7 @@
 				{
 					name: 'Le-Coran.com',
 					url: 'https://www.le-coran.com/',
-					fr: 'Le Coran lu en français, verset par verset, par Youssouf Leclerc (traduction de Muhammad Hamidullah).',
+					fr: 'Le Quran lu en français, verset par verset, par Youssouf Leclerc (traduction de Muhammad Hamidullah).',
 					ar: 'القرآن مقروءًا بالفرنسية آيةً آية بصوت يوسف لوكلير (ترجمة محمد حميد الله).'
 				}
 			]
@@ -109,7 +109,7 @@
 	{/each}
 
 	<p class="more">
-		<a href={link('/coran')}>{m.sources_reciters()}</a>
+		<a href={link('/quran')}>{m.sources_reciters()}</a>
 	</p>
 </div>
 

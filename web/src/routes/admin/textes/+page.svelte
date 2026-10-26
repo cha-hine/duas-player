@@ -4,7 +4,7 @@
 	import { formatDuration } from '#lib/media.ts';
 	import { isSynced, lineLanguages, TEXT_LANGUAGES, type Line } from '#lib/text-languages.ts';
 
-	// Audio of the categories that get synced text (Coran, Douas, Sahifa, Ziyarat by default)
+	// Audio of the categories that get synced text (Quran, Douas, Sahifa, Ziyarat by default)
 	type Filter = 'all' | 'none' | 'text' | 'synced';
 	const FILTERS: { id: Filter; label: string }[] = [
 		{ id: 'all', label: 'Tout' },

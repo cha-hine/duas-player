@@ -6,7 +6,7 @@ import Tv from '@lucide/svelte/icons/tv';
 import { m } from '#lib/paraglide/messages.js';
 
 export type NavItem = {
-	/** Unlocalized path, e.g. '/coran' */
+	/** Unlocalized path, e.g. '/quran' */
 	path: string;
 	label: () => string;
 	icon: Component;
@@ -16,7 +16,7 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
 	{ path: '/', label: m.nav_home, icon: House },
-	{ path: '/coran', label: m.nav_quran, icon: BookOpen },
+	{ path: '/quran', label: m.nav_quran, icon: BookOpen },
 	{
 		path: '/bibliotheque',
 		label: m.nav_library,

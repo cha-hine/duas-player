@@ -45,7 +45,7 @@
 		<ol class="surahs">
 			{#each shown as s (s.number)}
 				<li>
-					<a href={link(`/coran/${s.number}`)}>
+					<a href={link(`/quran/${s.number}`)}>
 						<span class="number">{isArabic ? arabicNumber(s.number) : s.number}</span>
 						<span class="names">
 							<span class="ar" lang="ar" dir="rtl">{s.title_ar}</span>
@@ -129,10 +129,16 @@
 	.surahs {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+		/* Every surah gets the same box, whatever the length of its names */
+		grid-auto-rows: 1fr;
 		gap: var(--space-2);
 		margin: 0;
 		padding: 0;
 		list-style: none;
+	}
+
+	.surahs li {
+		display: grid;
 	}
 
 	a {
@@ -174,8 +180,10 @@
 	}
 
 	.ar {
+		flex-shrink: 0;
 		font-family: var(--font-quran);
 		font-size: 1.2rem;
+		white-space: nowrap;
 	}
 
 	.fr {
