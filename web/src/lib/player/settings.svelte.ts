@@ -23,6 +23,8 @@ const TV_THEME: Theme = 'montagnes';
 export const SIZE_MIN = 0.6;
 export const SIZE_MAX = 2;
 const SIZE_STEP = 0.1;
+/** Starting sizes where the default (1) is too large: the Arabic script reads big. */
+const DEFAULT_SIZES: Partial<Record<TextLanguage, number>> = { ar: 0.8 };
 
 const KEY = 'sakina-player';
 
@@ -108,9 +110,9 @@ class PlayerSettings {
 		return TEXT_FONTS[code].find((font) => font.id === this.fonts[code]) ?? TEXT_FONTS[code][0];
 	}
 
-	/** The size chosen for a language (1 = default), before evening out the font. */
+	/** The size chosen for a language (1 = 100 %), before evening out the font. */
 	size(code: TextLanguage): number {
-		return this.sizes[code] ?? 1;
+		return this.sizes[code] ?? DEFAULT_SIZES[code] ?? 1;
 	}
 
 	/** What to multiply a language's text size by: the listener's size and the font's own. */
