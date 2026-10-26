@@ -30,12 +30,7 @@
 		neige: m.theme_neige,
 		foret: m.theme_foret,
 		cascade: m.theme_cascade,
-		lanternes: m.theme_lanternes,
-		kaaba: m.theme_kaaba,
-		medine: m.theme_medine,
-		karbala: m.theme_karbala,
-		najaf: m.theme_najaf,
-		mashhad: m.theme_mashhad
+		lanternes: m.theme_lanternes
 	};
 	const REPEAT_LABELS = {
 		off: m.player_repeat_off,
@@ -400,40 +395,6 @@
 			radial-gradient(circle at 35% 40%, #ffb35a 0 3px, transparent 4px),
 			radial-gradient(circle at 65% 62%, #ffb35a 0 2px, transparent 3px),
 			linear-gradient(#141a3a, #4a3355);
-	}
-
-	.kaaba {
-		background:
-			linear-gradient(#08080b, #08080b) 50% 70% / 30% 34% no-repeat,
-			linear-gradient(#e0b54d, #e0b54d) 50% 50% / 30% 6% no-repeat,
-			linear-gradient(#0e1a35, #5a4030);
-	}
-
-	.medine {
-		background:
-			radial-gradient(circle at 50% 75%, #2aa45f 0 30%, transparent 32%),
-			linear-gradient(#0c2233, #4a4a33);
-	}
-
-	.karbala,
-	.najaf {
-		background:
-			radial-gradient(circle at 50% 78%, #e3b44c 0 30%, transparent 32%),
-			linear-gradient(#0e1a35, #2c2840);
-	}
-
-	.karbala {
-		background:
-			linear-gradient(#c81e26, #c81e26) 50% 20% / 34% 16% no-repeat,
-			radial-gradient(circle at 50% 78%, #e3b44c 0 30%, transparent 32%),
-			linear-gradient(#0e1a35, #2c2840);
-	}
-
-	.mashhad {
-		background:
-			radial-gradient(circle at 35% 78%, #e3b44c 0 22%, transparent 24%),
-			radial-gradient(circle at 70% 78%, #3aa3c4 0 22%, transparent 24%),
-			linear-gradient(#0e1f3a, #1c3550);
 	}
 
 	.dunes {

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { Theme } from '../settings.svelte.ts';
-	import HolyScenes, { HOLY_SCENES, type HolyScene } from './HolyScenes.svelte';
 	import MoreScenes, { MORE_SCENES, type MoreScene } from './MoreScenes.svelte';
 	import NatureScene, { SCENES, type Scene } from './NatureScene.svelte';
 	import SkyLife from './SkyLife.svelte';
@@ -14,9 +13,6 @@
 	const scene = $derived((SCENES as readonly string[]).includes(theme) ? (theme as Scene) : null);
 	const more = $derived(
 		(MORE_SCENES as readonly string[]).includes(theme) ? (theme as MoreScene) : null
-	);
-	const holy = $derived(
-		(HOLY_SCENES as readonly string[]).includes(theme) ? (theme as HolyScene) : null
 	);
 
 	let canvas = $state<HTMLCanvasElement>();
@@ -139,14 +135,12 @@
 	<NatureScene {scene} {level} />
 {:else if more}
 	<MoreScenes scene={more} {level} />
-{:else if holy}
-	<HolyScenes scene={holy} {level} />
 {:else if fallback}
 	<div class="fallback" aria-hidden="true"></div>
 {:else}
 	<canvas bind:this={canvas} aria-hidden="true"></canvas>
 {/if}
-{#if !scene && !more && !holy}
+{#if !scene && !more}
 	<!-- Over the skies: birds and clouds at dawn, shooting stars at night -->
 	<div class="life" aria-hidden="true">
 		{#if theme === 'nuit'}
