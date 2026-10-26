@@ -4,6 +4,7 @@
 </script>
 
 <script lang="ts">
+	import Depth from './Depth.svelte';
 	import { particles, pines, stars } from './scenery.ts';
 	import SkyLife from './SkyLife.svelte';
 
@@ -75,6 +76,19 @@
 		<svg class="ground" viewBox="0 0 1600 140" preserveAspectRatio="none">
 			<path d="M0 60 C320 25 560 70 820 50 S1320 20 1600 55 V140 H0Z" fill="#cad6e6" />
 		</svg>
+		<!-- A cabin in the snow on the right, its window lit, smoke rising from the chimney -->
+		<div class="cabin">
+			<svg viewBox="0 0 120 90" width="100%">
+				<path d="M10 50 L60 14 L110 50Z" fill="#e8eef6" />
+				<rect x="18" y="48" width="84" height="40" fill="#24344c" />
+				<rect x="78" y="20" width="10" height="22" fill="#24344c" />
+				<rect class="window" x="34" y="58" width="16" height="14" fill="#ffcf7a" />
+				<rect x="64" y="60" width="14" height="28" fill="#152237" />
+			</svg>
+			{#each [0, 1, 2, 3] as i (i)}
+				<span class="smoke" style:animation-delay="{-i * 2.2}s"></span>
+			{/each}
+		</div>
 		{#each snow as flake, i (i)}
 			<span
 				class="flake"
@@ -87,6 +101,13 @@
 				></span>
 			</span>
 		{/each}
+		<Depth
+			light="230 240 255"
+			shade="#0a1626"
+			foreground={['bough']}
+			lights={[26, 14, 8]}
+			seed={5}
+		/>
 	{:else if scene === 'foret'}
 		{@render starField(sky.foret)}
 		<div class="moonbeams" bind:this={glow}>
@@ -141,6 +162,13 @@
 				style:animation-delay="{fly.delay}s, {fly.delay / 3}s"
 			></span>
 		{/each}
+		<Depth
+			light="190 255 150"
+			shade="#030908"
+			foreground={['ferns', 'branch']}
+			lights={[20, 14, 8]}
+			seed={6}
+		/>
 	{:else if scene === 'cascade'}
 		<SkyLife clouds birds cloudColour="235 240 245" />
 		<div class="rainbow" bind:this={glow}></div>
@@ -163,6 +191,32 @@
 			<div class="waves"></div>
 			<div class="waves slow"></div>
 		</div>
+		<!-- Two butterflies fluttering by the water -->
+		{#each [{ left: 22, top: 58, hue: '#f3c96b', d: 0 }, { left: 74, top: 46, hue: '#9fd6f2', d: -7 }] as fly, i (i)}
+			<span
+				class="butterfly"
+				style:left="{fly.left}%"
+				style:top="{fly.top}%"
+				style:animation-delay="{fly.d}s"
+			>
+				<svg viewBox="-12 -10 24 20" width="22">
+					<g fill={fly.hue}>
+						<path class="wing" d="M0 0 C-4 -9 -12 -9 -11 -2 C-10 3 -4 3 0 0Z" />
+						<path class="wing" d="M0 0 C4 -9 12 -9 11 -2 C10 3 4 3 0 0Z" />
+						<path class="wing" d="M0 0 C-3 6 -8 8 -8 4 C-8 1 -3 1 0 0Z" />
+						<path class="wing" d="M0 0 C3 6 8 8 8 4 C8 1 3 1 0 0Z" />
+					</g>
+					<rect x="-0.7" y="-4" width="1.4" height="9" rx="0.7" fill="#2a2a2a" />
+				</svg>
+			</span>
+		{/each}
+		<Depth
+			light="235 250 255"
+			shade="#0a1a1b"
+			foreground={['ferns', 'branch']}
+			lights={[24, 12, 8]}
+			seed={7}
+		/>
 	{:else}
 		{@render starField(sky.lanternes)}
 		<SkyLife stars />
@@ -180,6 +234,18 @@
 			<div class="glints"></div>
 			<div class="glints late"></div>
 		</div>
+		<!-- A small boat drifting across the lake, its lantern swinging -->
+		<span class="skiff">
+			<svg viewBox="0 0 70 40" width="64">
+				<path d="M4 28 H66 L58 36 H12Z" fill="#0c0a1d" />
+				<path d="M44 28 L44 8" stroke="#0c0a1d" stroke-width="1.5" />
+				<g class="swing">
+					<path d="M44 8 L44 12" stroke="#0c0a1d" stroke-width="1" />
+					<rect x="40.5" y="12" width="7" height="9" rx="2" fill="#ffb35a" />
+				</g>
+				<circle cx="44" cy="16" r="9" fill="#ffb35a" opacity="0.2" />
+			</svg>
+		</span>
 		{#each lanterns as lantern, i (i)}
 			<span
 				class="lantern"
@@ -192,6 +258,13 @@
 				></span>
 			</span>
 		{/each}
+		<Depth
+			light="255 180 100"
+			shade="#07061a"
+			foreground={['reeds']}
+			lights={[18, 14, 10]}
+			seed={8}
+		/>
 	{/if}
 </div>
 
@@ -200,6 +273,151 @@
 		position: absolute;
 		inset: 0;
 		overflow: hidden;
+		/* A slow camera move, like a film shot: the landscape comes a little closer */
+		animation: camera 90s ease-in-out infinite alternate;
+		will-change: transform;
+	}
+
+	@keyframes camera {
+		from {
+			transform: scale(1) translate(0, 0);
+		}
+		to {
+			transform: scale(1.06) translate(1%, -0.6%);
+		}
+	}
+
+	/* Snow: a cabin on the right, smoke curling up from its chimney */
+	.cabin {
+		position: absolute;
+		right: 17%;
+		bottom: 9%;
+		width: clamp(60px, 7vw, 120px);
+	}
+
+	.cabin svg {
+		display: block;
+	}
+
+	.window {
+		animation: blink 3.5s ease-in-out infinite alternate;
+	}
+
+	.smoke {
+		position: absolute;
+		left: 69%;
+		top: 14%;
+		width: 18px;
+		aspect-ratio: 1;
+		border-radius: 50%;
+		background: radial-gradient(circle, rgb(220 228 240 / 0.35), transparent 70%);
+		animation: smoke 9s ease-out infinite;
+		will-change: transform, opacity;
+		pointer-events: none;
+	}
+
+	@keyframes smoke {
+		from {
+			transform: translate(0, 0) scale(0.5);
+			opacity: 0;
+		}
+		15% {
+			opacity: 1;
+		}
+		to {
+			transform: translate(30px, -120px) scale(3.5);
+			opacity: 0;
+		}
+	}
+
+	/* Waterfall: butterflies fluttering in loops by the water */
+	.butterfly {
+		position: absolute;
+		animation: flutter 14s ease-in-out infinite alternate;
+		will-change: transform;
+	}
+
+	.butterfly svg {
+		display: block;
+	}
+
+	.butterfly .wing {
+		transform-origin: 0 0;
+		animation: flap 0.22s ease-in-out infinite alternate;
+	}
+
+	@keyframes flutter {
+		0% {
+			transform: translate(0, 0);
+		}
+		25% {
+			transform: translate(6vw, -5vh);
+		}
+		50% {
+			transform: translate(2vw, -11vh);
+		}
+		75% {
+			transform: translate(-5vw, -4vh);
+		}
+		100% {
+			transform: translate(-2vw, 3vh);
+		}
+	}
+
+	@keyframes flap {
+		from {
+			transform: scaleX(1);
+		}
+		to {
+			transform: scaleX(0.25);
+		}
+	}
+
+	/* Lanterns: a boat drifting across the lake, its lantern swinging */
+	.skiff {
+		position: absolute;
+		bottom: 8%;
+		left: 0;
+		animation: skiff 180s linear infinite;
+		animation-delay: -60s;
+		will-change: transform;
+	}
+
+	.skiff svg {
+		display: block;
+		animation: bob 3s ease-in-out infinite alternate;
+	}
+
+	.swing {
+		transform-origin: 44px 8px;
+		animation: swing 2.4s ease-in-out infinite alternate;
+	}
+
+	@keyframes skiff {
+		from {
+			transform: translateX(-10vw);
+		}
+		to {
+			transform: translateX(110vw);
+		}
+	}
+
+	@keyframes bob {
+		from {
+			transform: translateY(0) rotate(-1.5deg);
+		}
+		to {
+			transform: translateY(-3px) rotate(1.5deg);
+		}
+	}
+
+	@keyframes swing {
+		from {
+			transform: rotate(-12deg);
+		}
+		to {
+			transform: rotate(12deg);
+		}
 	}
 
 	.neige {
@@ -703,6 +921,20 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
+		.scene,
+		.window,
+		.butterfly,
+		.butterfly .wing,
+		.skiff,
+		.skiff svg,
+		.swing {
+			animation: none;
+		}
+
+		.smoke {
+			display: none;
+		}
+
 		.twinkle,
 		.band,
 		.beam,

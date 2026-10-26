@@ -4,6 +4,7 @@
 </script>
 
 <script lang="ts">
+	import Depth from './Depth.svelte';
 	import { particles, pines, stars } from './scenery.ts';
 	import SkyLife from './SkyLife.svelte';
 
@@ -88,6 +89,19 @@
 			<path d="M0 70 C300 30 520 80 800 60 S1300 25 1600 65 V140 H0Z" fill="#0f1f33" />
 		</svg>
 		<div class="mist"></div>
+		<!-- Banks of cloud drifting between the ridges, at two distances -->
+		<div class="cloudbank far"></div>
+		<div class="cloudbank"></div>
+		<!-- An eagle gliding in wide circles over the left ridges -->
+		<span class="eagle">
+			<svg viewBox="-40 -12 80 24" width="70">
+				<path
+					class="wings"
+					d="M0 2 C-8 -2 -20 -4 -38 2 C-24 0 -12 4 -3 6 L0 8 L3 6 C12 4 24 0 38 2 C20 -4 8 -2 0 2Z"
+					fill="#0c1726"
+				/>
+			</svg>
+		</span>
 		{#each leaves as leaf, i (i)}
 			<span
 				class="leaf"
@@ -103,6 +117,7 @@
 				</span>
 			</span>
 		{/each}
+		<Depth light="255 220 150" shade="#060d18" foreground={['grass', 'branch']} seed={2} />
 	{:else if scene === 'mer'}
 		{@render starsSvg(skyStars.mer)}
 		<SkyLife stars clouds birds cloudColour="200 215 235" />
@@ -126,12 +141,30 @@
 		<svg class="side right" viewBox="0 0 500 700" preserveAspectRatio="xMinYMax meet">
 			<path d="M0 700 V560 L80 540 L150 590 L190 650 L210 700Z" fill="#0b1828" />
 		</svg>
+		<!-- A sailing boat crossing the horizon, rocking, its lamp lit -->
+		<span class="boat">
+			<span class="rock">
+				<svg viewBox="0 0 60 50" width="56">
+					<path d="M30 2 L30 38 L8 38Z" fill="#c9cfd8" opacity="0.85" />
+					<path d="M32 8 L32 38 L50 38Z" fill="#aab3bf" opacity="0.8" />
+					<path d="M4 40 H56 L48 48 H12Z" fill="#0b1828" />
+					<circle cx="31" cy="3" r="1.6" fill="#ffe7a3" />
+				</svg>
+			</span>
+		</span>
 		<div class="sea">
 			<div class="waves"></div>
 			<div class="waves slow"></div>
 			<div class="glints"></div>
 			<div class="glints late"></div>
 		</div>
+		<Depth
+			light="200 225 255"
+			shade="#030a13"
+			foreground={['rocks']}
+			lights={[22, 12, 7]}
+			seed={3}
+		/>
 	{:else}
 		{@render starsSvg(skyStars.dunes)}
 		<SkyLife stars clouds cloudColour="240 205 170" />
@@ -170,6 +203,25 @@
 			<path d="M0 60 C300 20 600 40 900 70 S1350 30 1600 50 V140 H0Z" fill="#3a2b36" />
 			<path d="M0 110 C320 80 640 95 960 115 S1400 90 1600 100 V140 H0Z" fill="#231a25" />
 		</svg>
+		<!-- A caravan walking along the far dunes -->
+		<span class="caravan">
+			<svg viewBox="0 0 260 50" width="200">
+				<g fill="#2d2130">
+					{#each [0, 70, 140] as x (x)}
+						<path
+							d="M{x + 8} 46 L{x + 10} 30 C{x + 6} 22 {x + 14} 14 {x + 24} 16 C{x + 30} 8 {x +
+								40} 8 {x + 44} 18 C{x + 48} 18 {x + 50} 14 {x + 54} 10 L{x + 58} 10 L{x +
+								60} 14 L{x + 56} 16 C{x + 54} 22 {x + 50} 28 {x + 46} 30 L{x + 46} 46 L{x +
+								43} 46 L{x + 42} 32 L{x + 16} 32 L{x + 13} 46Z"
+						/>
+					{/each}
+					<path
+						d="M214 46 L216 28 C214 20 220 16 224 18 C228 16 232 22 230 28 L232 46 L228 46 L224 34 L220 46Z"
+					/>
+					<circle cx="224" cy="12" r="5" />
+				</g>
+			</svg>
+		</span>
 		<div class="haze"></div>
 		{#each SAND as [y, length, seconds, delay], i (i)}
 			<span
@@ -190,6 +242,7 @@
 				style:animation-delay="{fly.delay}s, {fly.delay / 3}s"
 			></span>
 		{/each}
+		<Depth light="255 200 140" shade="#120b12" foreground={['grass']} seed={4} />
 	{/if}
 </div>
 
@@ -198,6 +251,145 @@
 		position: absolute;
 		inset: 0;
 		overflow: hidden;
+		/* A slow camera move, like a film shot: the landscape comes a little closer */
+		animation: camera 90s ease-in-out infinite alternate;
+		will-change: transform;
+	}
+
+	@keyframes camera {
+		from {
+			transform: scale(1) translate(0, 0);
+		}
+		to {
+			transform: scale(1.06) translate(-1%, -0.6%);
+		}
+	}
+
+	/* Mountains: banks of cloud between the ridges, an eagle circling */
+	.cloudbank {
+		position: absolute;
+		inset: auto -40% 18% -40%;
+		height: 16%;
+		background:
+			radial-gradient(ellipse 18% 50% at 20% 50%, rgb(210 220 235 / 0.16), transparent 70%),
+			radial-gradient(ellipse 22% 45% at 55% 60%, rgb(210 220 235 / 0.12), transparent 70%),
+			radial-gradient(ellipse 16% 50% at 85% 45%, rgb(210 220 235 / 0.15), transparent 70%);
+		animation: drift 40s linear infinite alternate;
+		will-change: transform;
+		pointer-events: none;
+	}
+
+	.cloudbank.far {
+		bottom: 30%;
+		height: 10%;
+		opacity: 0.7;
+		animation-duration: 70s;
+		animation-direction: alternate-reverse;
+	}
+
+	.eagle {
+		position: absolute;
+		left: 8%;
+		top: 18%;
+		animation: circle 26s linear infinite;
+		will-change: transform;
+	}
+
+	.eagle svg {
+		display: block;
+		animation: glide 3.5s ease-in-out infinite alternate;
+	}
+
+	@keyframes circle {
+		from {
+			transform: rotate(0deg) translateX(9vw) rotate(0deg) scale(1);
+		}
+		50% {
+			transform: rotate(180deg) translateX(9vw) rotate(-180deg) scale(0.75);
+		}
+		to {
+			transform: rotate(360deg) translateX(9vw) rotate(-360deg) scale(1);
+		}
+	}
+
+	@keyframes glide {
+		from {
+			transform: scaleY(1) rotate(-4deg);
+		}
+		to {
+			transform: scaleY(0.7) rotate(5deg);
+		}
+	}
+
+	/* Sea: a boat sailing along the horizon, rocking */
+	.boat {
+		position: absolute;
+		bottom: 21%;
+		left: 0;
+		animation: sail 160s linear infinite;
+		animation-delay: -55s;
+		will-change: transform;
+	}
+
+	.boat .rock {
+		display: block;
+		transform-origin: 50% 100%;
+		animation: rock 4s ease-in-out infinite alternate;
+	}
+
+	.boat svg {
+		display: block;
+	}
+
+	@keyframes sail {
+		from {
+			transform: translateX(-8vw);
+		}
+		to {
+			transform: translateX(108vw);
+		}
+	}
+
+	@keyframes rock {
+		from {
+			transform: rotate(-3deg) translateY(1px);
+		}
+		to {
+			transform: rotate(3deg) translateY(-2px);
+		}
+	}
+
+	/* Dunes: a caravan crossing the far dunes, slowly */
+	.caravan {
+		position: absolute;
+		bottom: 17%;
+		left: 0;
+		animation: caravan 220s linear infinite;
+		animation-delay: -70s;
+		will-change: transform;
+	}
+
+	.caravan svg {
+		display: block;
+		animation: walk 1.6s ease-in-out infinite alternate;
+	}
+
+	@keyframes caravan {
+		from {
+			transform: translateX(108vw);
+		}
+		to {
+			transform: translateX(-30vw);
+		}
+	}
+
+	@keyframes walk {
+		from {
+			transform: translateY(0);
+		}
+		to {
+			transform: translateY(-1.5px);
+		}
 	}
 
 	.montagnes {
@@ -627,6 +819,14 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
+		.scene,
+		.cloudbank,
+		.eagle,
+		.eagle svg,
+		.boat,
+		.boat .rock,
+		.caravan,
+		.caravan svg,
 		.twinkle,
 		.rays,
 		.mist,

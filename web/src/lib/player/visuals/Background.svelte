@@ -3,6 +3,7 @@
 	import MoreScenes, { MORE_SCENES, type MoreScene } from './MoreScenes.svelte';
 	import NatureScene, { SCENES, type Scene } from './NatureScene.svelte';
 	import SkyLife from './SkyLife.svelte';
+	import Depth from './Depth.svelte';
 	import { FRAGMENTS, VERTEX } from './shaders.ts';
 
 	// Animated background of the immersive player: a WebGL sky, or a calm landscape. `level`
@@ -145,8 +146,10 @@
 	<div class="life" aria-hidden="true">
 		{#if theme === 'nuit'}
 			<SkyLife stars />
+			<Depth light="200 210 255" shade="#03060f" foreground={['branch', 'grass']} seed={9} />
 		{:else}
 			<SkyLife clouds birds cloudColour="240 210 160" />
+			<Depth light="255 215 160" shade="#0d0912" foreground={['grass', 'branch']} seed={10} />
 		{/if}
 	</div>
 {/if}
