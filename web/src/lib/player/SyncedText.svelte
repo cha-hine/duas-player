@@ -95,24 +95,30 @@
 			else high = mid;
 		}
 		probe.remove();
-		// On the line itself (and its follower): the previous line, fading out, keeps its size
+		// On the line itself (and its follower): the previous line, fading out, keeps its size.
+		// On the box too, so the next line starts from about the right size.
 		slide.style.setProperty('--fit', low.toFixed(3));
 		box.querySelector<HTMLElement>('.next')?.style.setProperty('--fit', low.toFixed(3));
+		box.style.setProperty('--fit', low.toFixed(3));
 	}
 
 	$effect(() => {
-		// Again for each line and each change of languages, fonts or sizes; then whenever fonts
-		// arrive (the fallback font is much taller than Amiri) and when the screen changes
-		void [index, languages, settings.fonts, settings.sizes];
+		// Again for each line, its text (a chosen translation arriving) and each change of
+		// languages, fonts or sizes; then whenever fonts arrive (the fallback font is much taller
+		// than Amiri) and when the screen changes
+		void [index, languages, settings.fonts, settings.sizes, languages.map((c) => say(line, c))];
 		fit();
 		const fonts = document.fonts;
 		fonts?.addEventListener('loadingdone', fit);
 		const stage = box?.parentElement;
-		let first = true;
-		const observer = new ResizeObserver(() => {
-			// Observing reports the current size once: not a change
-			if (!first) fit();
-			first = false;
+		// Only a real change of the screen's size: refitting on every report made the line jump
+		// between two sizes when the fading line briefly overflowed the stage
+		let size = '';
+		const observer = new ResizeObserver(([entry]) => {
+			const { width, height } = entry.contentRect;
+			const now = `${Math.round(width / 8)}x${Math.round(height / 8)}`;
+			if (size && now !== size) fit();
+			size = now;
 		});
 		if (stage) observer.observe(stage);
 		return () => {

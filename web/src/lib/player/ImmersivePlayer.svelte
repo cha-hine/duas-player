@@ -252,6 +252,8 @@
 		place-items: center;
 		padding: var(--space-5) var(--gutter);
 		overflow-y: auto;
+		/* Room for a scrollbar kept either way: one appearing would narrow the text and resize it */
+		scrollbar-gutter: stable both-edges;
 	}
 
 	footer {
