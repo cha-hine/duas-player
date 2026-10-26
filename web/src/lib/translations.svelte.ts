@@ -46,6 +46,14 @@ class Translations {
 		}
 	}
 
+	/** False while a chosen translation of `surah` is still on its way. */
+	loaded(surah: number): boolean {
+		return TRANSLATED.every((language) => {
+			const translator = settings.translators[language];
+			return !translator || !!this.texts[`${language}/${translator}/${surah}`];
+		});
+	}
+
 	/**
 	 * A line's text in `code`: the chosen translation of that verse (or of the basmala) when
 	 * there is one and it is loaded, the line's own text otherwise. `surah`: the Quran surah the

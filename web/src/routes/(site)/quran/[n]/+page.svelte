@@ -3,11 +3,11 @@
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import Pause from '@lucide/svelte/icons/pause';
 	import Play from '@lucide/svelte/icons/play';
-	import Repeat from '@lucide/svelte/icons/repeat';
 	import Seo from '#lib/components/Seo.svelte';
 	import TextSettings from '#lib/components/TextSettings.svelte';
 	import Button from '#lib/components/ui/Button.svelte';
 	import IconButton from '#lib/components/ui/IconButton.svelte';
+	import Spinner from '#lib/components/ui/Spinner.svelte';
 	import { link } from '#lib/i18n.ts';
 	import { name, title, type Line, type MediaItem } from '#lib/media.ts';
 	import { m } from '#lib/paraglide/messages.js';
@@ -18,25 +18,26 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { arabicNumber, recitationSlug, verseMark } from '#lib/quran.ts';
-	import { translations } from '#lib/translations.svelte.ts';
+	import { translations, TRANSLATED } from '#lib/translations.svelte.ts';
 	import { isSynced, lineLanguages, TEXT_LANGUAGES } from '#lib/text-languages.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 
-	const REPEATS = [1, 3, 5, 10, Infinity];
-
 	const surah = $derived(data.surah);
 	// svelte-ignore state_referenced_locally
 	let recitationId = $state(data.surah.recitations[0]?.id ?? '');
-	let times = $state(3);
-	let from = $state(1);
 	let follow = $state(true);
 
 	const recitation = $derived(surah.recitations.find((r) => r.id === recitationId) ?? null);
 	// The translation the listener chose, for this surah
 	$effect(() => {
 		void translations.load(surah.number);
+	});
+	/** Languages of this surah with translations to choose from, listed under the recitation. */
+	const translatable = $derived(lineLanguages(surah.lines).filter((c) => TRANSLATED.includes(c)));
+	$effect(() => {
+		for (const code of translatable) void translations.list(code);
 	});
 
 	/** Timings of the chosen recitation, loaded on demand (the list comes without them). */
@@ -57,7 +58,6 @@
 			// private browsing: the first recitation is selected
 		}
 		recitationId = (list.find((r) => variant(r.slug) === saved) ?? list[0])?.id ?? '';
-		from = 1;
 	});
 
 	function choose(id: string) {
@@ -103,8 +103,6 @@
 	const available = $derived(lineLanguages(surah.lines));
 	const languages = $derived(settings.visible(available));
 	const verses = $derived(surah.lines.filter((l) => l.n));
-	/** End of the memorisation range: the last verse until the reader changes it. */
-	let to = $derived(verses.length);
 	const basmala = $derived(surah.lines.find((l) => !l.n) ?? null);
 	const playing = $derived(!!recitation && player.isCurrent(recitation));
 
@@ -164,15 +162,8 @@
 		if (t && recitation) player.playFrom([recitation], recitation, t.start);
 	}
 
-	function repeat(first: number, last: number) {
-		const a = timing(first);
-		const b = timing(Math.max(first, last));
-		if (a && b && recitation) player.repeatPassage([recitation], recitation, a.start, b.end, times);
-	}
-
 	const number = (n: number) => (isArabic ? arabicNumber(n) : String(n));
 	const frenchName = (title: string) => title.replace(/^Sourate \d+ — /, '');
-	const repeatLabel = (n: number) => (n === Infinity ? m.repeat_forever() : `×${n}`);
 </script>
 
 <Seo
@@ -207,22 +198,61 @@
 		</nav>
 	</header>
 
+	{#snippet translationChoice()}
+		{#each translatable as code (code)}
+			{#if !translations.lists[code]}
+				<!-- Same size as the menu it stands for, so nothing moves when it arrives -->
+				<div class="pending">
+					<span>{m.translation_label()}</span>
+					<span class="placeholder"><Spinner label={m.loading()} /></span>
+				</div>
+			{:else if translations.lists[code].length}
+				<label>
+					<span class="with-spinner">
+						{m.translation_label()}
+						{#if !translations.loaded(surah.number)}<Spinner label={m.loading()} size={14} />{/if}
+					</span>
+					<select
+						value={settings.translators[code] ?? ''}
+						aria-label={m.text_translation({ language: TEXT_LANGUAGES[code].native })}
+						onchange={(e) => settings.setTranslator(code, e.currentTarget.value)}
+					>
+						<option value="">{m.text_translation_default()}</option>
+						{#each translations.lists[code] ?? [] as translator (translator.id)}
+							<option value={translator.id}>{translator.name}</option>
+						{/each}
+					</select>
+				</label>
+			{/if}
+		{/each}
+	{/snippet}
+
 	<section class="toolbar">
 		{#if surah.recitations.length}
-			<label class="recitation">
-				<span>{m.recitation_label()}</span>
-				<select value={recitationId} onchange={(e) => choose(e.currentTarget.value)}>
-					{#each surah.recitations as r (r.id)}
-						<option value={r.id}>{recitationLabel(r)}</option>
-					{/each}
-				</select>
-			</label>
+			<div class="choices">
+				<label>
+					<span>{m.recitation_label()}</span>
+					<select value={recitationId} onchange={(e) => choose(e.currentTarget.value)}>
+						{#each surah.recitations as r (r.id)}
+							<option value={r.id}>{recitationLabel(r)}</option>
+						{/each}
+					</select>
+				</label>
+				{@render translationChoice()}
+			</div>
 			<Button onclick={playSurah}>
 				{#snippet icon()}{#if playing && !player.paused}<Pause />{:else}<Play />{/if}{/snippet}
 				{playing && !player.paused ? m.player_pause() : m.play_surah()}
 			</Button>
 		{:else}
 			<p class="note">{m.no_recitation()}</p>
+			<div class="choices">{@render translationChoice()}</div>
+		{/if}
+		{#if synced}
+			<label class="follow">
+				<input type="checkbox" bind:checked={follow} />
+				{m.follow_reading()}
+			</label>
 		{/if}
 		<div class="display">
 			{#each available as code (code)}
@@ -239,45 +269,6 @@
 			<TextSettings languages={available} />
 		</div>
 	</section>
-
-	{#if synced}
-		<section class="memorize">
-			<strong>{m.memorize_title()}</strong>
-			<label>
-				{m.repeat_times()}
-				<select bind:value={times}>
-					{#each REPEATS as r (r)}<option value={r}>{repeatLabel(r)}</option>{/each}
-				</select>
-			</label>
-			<label>
-				{m.memorize_range()}
-				{m.from_verse()}
-				<input type="number" min="1" max={verses.length} bind:value={from} />
-				{m.to_verse()}
-				<input type="number" min={from} max={verses.length} bind:value={to} />
-			</label>
-			<Button variant="secondary" onclick={() => repeat(from, to)}>
-				{#snippet icon()}<Repeat />{/snippet}
-				{m.memorize_range()}
-			</Button>
-			{#if playing && player.loop}
-				{@const loop = player.loop}
-				<span class="looping">
-					{loop.total === Infinity
-						? m.repeating_forever()
-						: m.repeating({
-								n: number(loop.total - loop.remaining + 1),
-								total: number(loop.total)
-							})}
-				</span>
-				<Button variant="ghost" onclick={() => (player.loop = null)}>{m.stop_repeat()}</Button>
-			{/if}
-			<label class="follow">
-				<input type="checkbox" bind:checked={follow} />
-				{m.follow_reading()}
-			</label>
-		</section>
-	{/if}
 
 	<div class="text">
 		{#if basmala && languages.includes('ar')}
@@ -325,9 +316,6 @@
 					<div class="actions">
 						<IconButton label={m.play_from_verse({ n })} onclick={() => playFrom(n)}
 							><Play /></IconButton
-						>
-						<IconButton label={m.repeat_verse({ n })} onclick={() => repeat(n, n)}
-							><Repeat /></IconButton
 						>
 					</div>
 				{/if}
@@ -405,8 +393,7 @@
 		height: 16px;
 	}
 
-	.toolbar,
-	.memorize {
+	.toolbar {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
@@ -417,8 +404,7 @@
 		background: var(--color-surface);
 	}
 
-	.toolbar :global(svg),
-	.memorize :global(svg) {
+	.toolbar :global(svg) {
 		width: 18px;
 		height: 18px;
 	}
@@ -430,8 +416,7 @@
 		font-size: var(--text-sm);
 	}
 
-	select,
-	input[type='number'] {
+	select {
 		min-height: 38px;
 		padding: 0 var(--space-2);
 		border: 1px solid var(--color-border);
@@ -439,18 +424,38 @@
 		background: var(--color-bg);
 	}
 
-	input[type='number'] {
-		width: 4.5rem;
-	}
-
-	/* The recitation menu shrinks to the screen: some names are long */
-	.recitation {
-		flex: 1 1 14rem;
+	/* Recitation, and the translation right under it; the menus shrink to the screen, some
+	   names are long */
+	.choices {
+		display: grid;
+		flex: 1 1 18rem;
+		gap: var(--space-2);
 		min-width: 0;
 	}
 
-	.recitation select {
-		flex: 1;
+	.choices label,
+	.pending {
+		display: grid;
+		grid-template-columns: 6.5rem minmax(0, 1fr);
+		align-items: center;
+		font-size: var(--text-sm);
+	}
+
+	.placeholder {
+		display: grid;
+		place-items: center;
+		min-height: 38px;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+	}
+
+	.with-spinner {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-1);
+	}
+
+	.choices select {
 		min-width: 0;
 		max-width: 100%;
 		text-overflow: ellipsis;
@@ -481,12 +486,6 @@
 
 	.pill[aria-pressed='false'] {
 		opacity: 0.45;
-	}
-
-	.looping {
-		color: var(--color-secondary-text);
-		font-weight: 600;
-		font-size: var(--text-sm);
 	}
 
 	.follow {
