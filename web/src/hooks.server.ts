@@ -1,11 +1,20 @@
-import type { Handle } from '@sveltejs/kit/hooks';
+import type { Handle, ServerInit } from '@sveltejs/kit/hooks';
 import { sequence } from '@sveltejs/kit/hooks';
 import { DEVICE_COOKIE, detectDevice } from '#lib/device.ts';
 import { getTextDirection } from '#lib/paraglide/runtime.js';
 import { paraglideMiddleware } from '#lib/paraglide/server.js';
+import * as content from '#lib/server/content.ts';
 import { THEME_COOKIE, parseTheme } from '#lib/theme.ts';
 
 const YEAR = 60 * 60 * 24 * 365;
+
+// Fill the cache for the busiest pages as the server starts, so the first visitor after a
+// deploy doesn't wait for PocketBase. Not awaited: a slow database must not hold up the start.
+export const init: ServerInit = () => {
+	void Promise.all([content.categories(), content.surahs()]).catch((e) =>
+		console.warn('Cache warm-up failed:', e)
+	);
+};
 
 const handleParaglide: Handle = ({ event, resolve }) =>
 	paraglideMiddleware(event.request, ({ request, locale }) => {

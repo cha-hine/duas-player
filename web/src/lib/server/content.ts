@@ -1,9 +1,11 @@
 // Reads public content from PocketBase over the internal network (published records only,
-// enforced by the collections' rules) and shapes it for the pages.
+// enforced by the collections' rules) and shapes it for the pages. Page reads go through the
+// in-memory cache (cache.ts): new content shows up within minutes.
 import PocketBase, { type RecordModel } from 'pocketbase';
 import { PUBLIC_PB_URL } from '$app/env/public';
 import { toLanguage, type Category, type Line, type MediaItem, type Reciter } from '#lib/media.ts';
 import { normalizeSearch } from '#lib/search.ts';
+import { cached } from './cache.ts';
 import { PB_URL } from './pocketbase.ts';
 
 type Collection = 'tracks' | 'videos';
@@ -103,13 +105,14 @@ async function listItems(filter: string, params: Record<string, unknown> = {}, l
 		.slice(0, limit);
 }
 
-export async function categories(): Promise<Category[]> {
-	return (await client().collection('categories').getFullList({ sort: 'order,name_fr' })).map(
-		toCategory
+export const categories = (): Promise<Category[]> =>
+	cached('categories', async () =>
+		(await client().collection('categories').getFullList({ sort: 'order,name_fr' })).map(toCategory)
 	);
-}
 
-export async function category(slug: string): Promise<Category | null> {
+export const category = (slug: string) => cached(`category:${slug}`, () => loadCategory(slug));
+
+async function loadCategory(slug: string): Promise<Category | null> {
 	const pb = client();
 	const list = await pb
 		.collection('categories')
@@ -117,9 +120,13 @@ export async function category(slug: string): Promise<Category | null> {
 	return list.items[0] ? toCategory(list.items[0]) : null;
 }
 
-export const itemsInCategory = (id: string) => listItems('category = {:id}', { id });
+export const itemsInCategory = (id: string) =>
+	cached(`items:${id}`, () => listItems('category = {:id}', { id }));
 
-export async function item(kind: 'audio' | 'video', slug: string): Promise<MediaItem | null> {
+export const item = (kind: 'audio' | 'video', slug: string) =>
+	cached(`${kind}:${slug}`, () => loadItem(kind, slug));
+
+async function loadItem(kind: 'audio' | 'video', slug: string): Promise<MediaItem | null> {
 	const pb = client();
 	const list = await pb.collection(kind === 'audio' ? 'tracks' : 'videos').getList(1, 1, {
 		filter: pb.filter(`${READY} && slug = {:slug}`, { slug }),
@@ -132,18 +139,16 @@ export async function item(kind: 'audio' | 'video', slug: string): Promise<Media
 
 /** Other items of the same category, for "more like this". */
 export async function related(of: MediaItem, limit = 8): Promise<MediaItem[]> {
-	if (!of.category) return [];
-	const items = await listItems(
-		'category = {:cat} && id != {:id}',
-		{ cat: of.category.id, id: of.id },
-		limit
+	const category = of.category;
+	if (!category) return [];
+	return cached(`related:${of.id}:${limit}`, () =>
+		listItems('category = {:cat} && id != {:id}', { cat: category.id, id: of.id }, limit)
 	);
-	return items;
 }
 
-export async function reciter(
-	slug: string
-): Promise<{ reciter: Reciter; items: MediaItem[] } | null> {
+export const reciter = (slug: string) => cached(`reciter:${slug}`, () => loadReciter(slug));
+
+async function loadReciter(slug: string): Promise<{ reciter: Reciter; items: MediaItem[] } | null> {
 	const pb = client();
 	const list = await pb
 		.collection('reciters')
@@ -183,7 +188,6 @@ type QuranIndex = {
 	/** Reciters with at least one synced surah, with how many. */
 	reciters: (Reciter & { surahs: number })[];
 };
-let quranCache: { at: number; index: QuranIndex } | null = null;
 const QURAN_CACHE_MS = 10 * 60 * 1000;
 
 /** The 114 surahs (from the text library), with verse and recitation counts. */
@@ -192,8 +196,9 @@ export const surahs = async () => (await quranIndex()).surahs;
 /** Reciters of the Quran, by name. */
 export const quranReciters = async () => (await quranIndex()).reciters;
 
-async function quranIndex(): Promise<QuranIndex> {
-	if (quranCache && Date.now() - quranCache.at < QURAN_CACHE_MS) return quranCache.index;
+const quranIndex = () => cached('quran', loadQuranIndex, QURAN_CACHE_MS);
+
+async function loadQuranIndex(): Promise<QuranIndex> {
 	const pb = client();
 	const [texts, recitations, reciters] = await Promise.all([
 		pb.collection('texts').getFullList({
@@ -225,7 +230,6 @@ async function quranIndex(): Promise<QuranIndex> {
 			.filter((r) => byReciter[r.id])
 			.map((r) => ({ ...toReciter(r), surahs: byReciter[r.id] }))
 	};
-	quranCache = { at: Date.now(), index };
 	return index;
 }
 
@@ -233,7 +237,9 @@ async function quranIndex(): Promise<QuranIndex> {
  * One surah's text and its synced recitations, without their lines (dozens of reciters times
  * hundreds of verses): the page loads the timings of the one chosen.
  */
-export async function surah(number: number) {
+export const surah = (number: number) => cached(`surah:${number}`, () => loadSurah(number));
+
+async function loadSurah(number: number) {
 	const pb = client();
 	const slug = `sourate-${String(number).padStart(3, '0')}`;
 	const found = await pb
@@ -266,21 +272,18 @@ export async function surah(number: number) {
 export type Translator = { id: string; name: string };
 export type SurahTranslation = { basmala?: string; verses: string[] };
 
-const translatorCache = new Map<string, { at: number; list: Translator[] }>();
-
 /** Translators of a language, by name (cached like the Quran index). */
-export async function translators(language: string): Promise<Translator[]> {
-	const cached = translatorCache.get(language);
-	if (cached && Date.now() - cached.at < QURAN_CACHE_MS) return cached.list;
+export const translators = (language: string) =>
+	cached(`translators:${language}`, () => loadTranslators(language), QURAN_CACHE_MS);
+
+async function loadTranslators(language: string): Promise<Translator[]> {
 	const pb = client();
 	const rows = await pb.collection('translations').getFullList({
 		filter: pb.filter('language = {:language} && surah = 1', { language }),
 		sort: 'translator_name',
 		fields: 'translator,translator_name'
 	});
-	const list = rows.map((r) => ({ id: r.translator as string, name: r.translator_name as string }));
-	translatorCache.set(language, { at: Date.now(), list });
-	return list;
+	return rows.map((r) => ({ id: r.translator as string, name: r.translator_name as string }));
 }
 
 /** One surah in one translation, or null. */
