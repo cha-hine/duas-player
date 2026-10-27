@@ -53,6 +53,9 @@ export type Mp3Part = {
 	seconds: number;
 	sampleRate: number;
 	samplesPerFrame: number;
+	mono: boolean;
+	/** Average bitrate, to re-encode another verse like this one. */
+	kbps: number;
 	/** Frame-like bytes left out (in tags or junk); joined as audio before, they broke playback. */
 	stray: number;
 };
@@ -104,7 +107,9 @@ export function readMp3(data: Uint8Array): Mp3Part {
 		i += frame.length;
 	}
 	if (frames.length === 0) throw new Error('No MP3 audio frames found');
-	return { frames, seconds: samples / sampleRate, sampleRate, samplesPerFrame, stray };
+	const seconds = samples / sampleRate;
+	const kbps = frames.reduce((s, f) => s + f.length, 0) / seconds / 125;
+	return { frames, seconds, sampleRate, samplesPerFrame, mono: stream!.mono, kbps, stray };
 }
 
 /**
@@ -150,7 +155,7 @@ function xingFrame(first: Uint8Array, frames: Uint8Array[]): Uint8Array {
 /** One MP3 made of the given parts in order; they must share their sample rate and layout. */
 export function joinMp3(parts: Mp3Part[]): Uint8Array<ArrayBuffer> {
 	const rate = parts[0].sampleRate;
-	if (parts.some((p) => p.sampleRate !== rate || p.samplesPerFrame !== parts[0].samplesPerFrame)) {
+	if (parts.some((p) => p.sampleRate !== rate || p.samplesPerFrame !== parts[0].samplesPerFrame || p.mono !== parts[0].mono)) {
 		throw new Error('Parts have different sample rates');
 	}
 	const frames = parts.flatMap((p) => p.frames);

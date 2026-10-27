@@ -20,6 +20,7 @@
 // files hold frame-like junk, which the earlier MP3 reader joined into the audio (playback
 // stopping or crackling mid-surah, verses drifting from the text), or whose cut-off verses
 // can now be taken from another folder.
+import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import ExcelJS from 'exceljs';
@@ -280,10 +281,38 @@ function cutOff(parts: Mp3Part[], letters: number[]) {
 	return (p: Mp3Part, i: number) => letters[i] >= 20 && p.seconds / letters[i] < usual / 4;
 }
 
+/** ffmpeg on this computer (FFMPEG names another one), or null: odd verses are then not re-encoded. */
+const FFMPEG = process.env.FFMPEG ?? 'ffmpeg';
+let ffmpegFound: Promise<boolean> | undefined;
+const hasFfmpeg = () =>
+	(ffmpegFound ??= new Promise((resolve) => {
+		const child = spawn(FFMPEG, ['-version'], { stdio: 'ignore' });
+		child.on('error', () => resolve(false));
+		child.on('close', (code) => resolve(code === 0));
+	}));
+
+/** The verse at `url` re-encoded like `like` (sample rate, channels, bitrate), so it can be joined. */
+async function encodeLike(url: string, like: Mp3Part): Promise<Mp3Part> {
+	const input = isLocal(url) ? await readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer());
+	const args = ['-hide_banner', '-loglevel', 'error', '-i', 'pipe:0', '-ar', String(like.sampleRate), '-ac', like.mono ? '1' : '2'];
+	args.push('-c:a', 'libmp3lame', '-b:a', `${Math.round(like.kbps)}k`, '-write_xing', '0', '-id3v2_version', '0', '-f', 'mp3', 'pipe:1');
+	const child = spawn(FFMPEG, args, { stdio: ['pipe', 'pipe', 'pipe'] });
+	const out: Buffer[] = [];
+	const err: Buffer[] = [];
+	child.stdout.on('data', (d: Buffer) => out.push(d));
+	child.stderr.on('data', (d: Buffer) => err.push(d));
+	child.stdin.end(input);
+	const code = await new Promise<number | null>((resolve) => child.on('close', resolve));
+	if (code !== 0) throw new Error(`ffmpeg ${url}: ${Buffer.concat(err).toString().slice(-300)}`);
+	return readMp3(new Uint8Array(Buffer.concat(out)));
+}
+
 /**
- * The verses of `sura` from the first folder that has them all, recorded alike (frames are
- * joined without re-encoding, so one sample rate) and without an extra verse (another verse
- * count), with the basmala before them when recorded alike. `why` says why none fits.
+ * The verses of `sura` from the first folder that has them all, without an extra verse (another
+ * verse count), with the basmala before them when recorded alike. `why` says why none fits.
+ * Frames are joined without re-encoding, so one layout (sample rate, channels): the few verses
+ * recorded otherwise are taken from another folder recorded like the rest, or re-encoded with
+ * ffmpeg when there is one.
  * Some EveryAyah files are cut off (a 15 s verse kept as 0.3 s): such a verse is taken from
  * another folder of the recitation when one has it whole; `cut` lists those left as they are.
  */
@@ -302,12 +331,33 @@ async function recording(rec: Recitation, sura: number, letters: number[]) {
 			continue;
 		}
 		const found = parts as Mp3Part[];
-		const alike = (p: Mp3Part | null) =>
-			!!p && p.sampleRate === found[0].sampleRate && p.samplesPerFrame === found[0].samplesPerFrame;
-		if (!found.every(alike)) {
-			why.push(`${folder}: verses recorded at different sample rates`);
+		const layout = (p: Mp3Part) => `${p.sampleRate}/${p.samplesPerFrame}/${p.mono}`;
+		const counts = new Map<string, number>();
+		for (const p of found) counts.set(layout(p), (counts.get(layout(p)) ?? 0) + 1);
+		const usual = [...counts].sort((a, b) => b[1] - a[1])[0][0];
+		const like = found.find((p) => layout(p) === usual)!;
+		const alike = (p: Mp3Part | null) => !!p && layout(p) === usual;
+		const odd = found.flatMap((p, i) => (alike(p) ? [] : [i]));
+		let reencoded = 0;
+		for (const i of odd) {
+			for (const other of rec.folders.filter((f) => f !== folder)) {
+				const p = await mp3(file(other, sura, i + 1));
+				if (alike(p)) {
+					found[i] = p!;
+					break;
+				}
+			}
+			if (!alike(found[i]) && (await hasFfmpeg())) {
+				found[i] = await encodeLike(file(folder, sura, i + 1), like);
+				reencoded++;
+			}
+		}
+		const still = found.filter((p) => !alike(p)).length;
+		if (still) {
+			why.push(`${folder}: ${still} verses recorded at another sample rate (install ffmpeg to re-encode them)`);
 			continue;
 		}
+		if (reencoded) console.log(`  ${sura}: ${reencoded} verses re-encoded like the others`);
 		let basmala: Mp3Part | null = null;
 		if (!NO_BASMALA.has(sura)) {
 			basmala = await mp3(file(folder, sura, 0));
