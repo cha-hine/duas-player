@@ -13,7 +13,7 @@ const SAMPLE_RATES: Record<number, number[]> = {
 	0: [11025, 12000, 8000] // MPEG 2.5
 };
 
-type Frame = { length: number; samples: number; sampleRate: number };
+type Frame = { length: number; samples: number; sampleRate: number; version: number; mono: boolean };
 
 /** The Layer III frame starting at `i`, or null when the bytes there are not one. */
 function frameAt(data: Uint8Array, i: number): Frame | null {
@@ -28,8 +28,11 @@ function frameAt(data: Uint8Array, i: number): Frame | null {
 	const padding = (data[i + 2] >> 1) & 1;
 	const samples = version === 3 ? 1152 : 576;
 	const length = Math.floor(((samples / 8) * bitrate) / sampleRate) + padding;
-	return { length, samples, sampleRate };
+	return { length, samples, sampleRate, version, mono: data[i + 3] >> 6 === 3 };
 }
+
+/** Same stream layout: a real frame never changes version, sample rate or channels mid-file. */
+const alike = (a: Frame, b: Frame) => a.version === b.version && a.sampleRate === b.sampleRate && a.mono === b.mono;
 
 /** Skips the ID3v2 tag at the start, if any. */
 function audioStart(data: Uint8Array): number {
@@ -50,24 +53,44 @@ export type Mp3Part = {
 	seconds: number;
 	sampleRate: number;
 	samplesPerFrame: number;
+	/** Frame-like bytes left out (in tags or junk); joined as audio before, they broke playback. */
+	stray: number;
 };
 
-/** The audio frames of one MP3 file (tags and info frame left out) and its exact duration. */
+/**
+ * The audio frames of one MP3 file (tags and info frame left out) and its exact duration.
+ * Stray bytes and trailing tags (ID3v1 "TAG", APE, pictures) can look like a frame header: a
+ * frame is kept only when it has the layout of the stream, and after junk only when the next
+ * frame follows it alike, so no false frame of another sample rate ends up in a joined surah.
+ */
 export function readMp3(data: Uint8Array): Mp3Part {
 	const frames: Uint8Array[] = [];
 	let samples = 0;
 	let sampleRate = 0;
 	let samplesPerFrame = 0;
+	let stray = 0;
 	let i = audioStart(data);
 	let first = true;
+	let stream: Frame | null = null;
+	let synced = false;
 	while (i < data.length) {
 		const frame = frameAt(data, i);
-		// Stray bytes and trailing tags (ID3v1 "TAG", APE) are not frames: step over them
 		if (!frame) {
+			synced = false;
 			i++;
 			continue;
 		}
 		if (i + frame.length > data.length) break;
+		const end = i + frame.length;
+		const next = end === data.length ? frame : frameAt(data, end);
+		if ((stream && !alike(stream, frame)) || (!synced && !(next && alike(frame, next)))) {
+			stray++;
+			synced = false;
+			i++;
+			continue;
+		}
+		stream = frame;
+		synced = true;
 		if (first && isInfoFrame(data, i, frame.length)) {
 			first = false;
 			i += frame.length;
@@ -81,7 +104,7 @@ export function readMp3(data: Uint8Array): Mp3Part {
 		i += frame.length;
 	}
 	if (frames.length === 0) throw new Error('No MP3 audio frames found');
-	return { frames, seconds: samples / sampleRate, sampleRate, samplesPerFrame };
+	return { frames, seconds: samples / sampleRate, sampleRate, samplesPerFrame, stray };
 }
 
 /**

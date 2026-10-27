@@ -4,7 +4,7 @@
 //
 //   cd scripts
 //   $env:SAKINA_EMAIL = "you@example.com"; $env:SAKINA_PASSWORD = "..."
-//   node import-everyayah.ts [--reciters alafasy,husary] [--surahs 1,112-114] [--draft]
+//   node import-everyayah.ts [--reciters alafasy,husary] [--surahs 1,112-114] [--draft] [--repair]
 //     [--leclerc D:/coran-francais-verset-par-verset --xlsx C:/path/41-traductions-Coran.xlsx]
 //
 // --leclerc adds Youssouf Leclerc reading the French translation (Hamidullah, revised edition),
@@ -12,8 +12,13 @@
 // read from the "41 traductions du Coran" spreadsheet (--xlsx), instead of the library's.
 //
 // Needs the surahs in the text library first (import-quran.ts). Tracks already imported (same
-// slug) are skipped, so the script can be stopped and run again. A surah whose recording does
-// not have the same verses as the text (some Warsh surahs) is skipped for that reciter.
+// slug) are skipped, so the script can be stopped and run again; those that failed are done
+// again. A surah whose recording does not have the same verses as the text (some Warsh surahs)
+// is skipped for that reciter.
+//
+// --repair downloads the verses of the tracks already there too and replaces those whose verse
+// files hold frame-like junk, which the earlier MP3 reader joined into the audio (playback
+// stopping or crackling mid-surah, verses drifting from the text).
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import ExcelJS from 'exceljs';
@@ -138,6 +143,7 @@ if (leclercDir) {
 const onlyReciters = arg('reciters')?.split(',');
 const surahList = numbers(arg('surahs'));
 const published = !process.argv.includes('--draft');
+const repair = process.argv.includes('--repair');
 if (!EMAIL || !PASSWORD) {
 	console.error('Set SAKINA_EMAIL and SAKINA_PASSWORD (see the top of this file).');
 	process.exit(1);
@@ -332,14 +338,24 @@ let done = 0;
 let sent = 0;
 const skipped: string[] = [];
 
-/** Builds and uploads one surah of one recitation; returns false when EveryAyah lacks it. */
-async function importSurah(rec: Recitation, reciter: string, sura: number, slug: string) {
+/**
+ * Builds and uploads one surah of one recitation; returns false when EveryAyah lacks it.
+ * `replace` is the track already there: replaced when it failed, or when its verses had stray
+ * frames (joined into the audio by the earlier MP3 reader); otherwise left as it is.
+ */
+async function importSurah(rec: Recitation, reciter: string, sura: number, slug: string, replace?: { id: string; status: string }) {
 	const text = texts.get(sura)!;
 	const verseLines = text.lines.filter((l) => l.n);
 	const found = await recording(rec, sura, verseLines.length);
 	if (!found.verses) {
 		console.log(`  ${sura}: skipped (${found.why.join('; ')})`);
 		return false;
+	}
+	if (replace) {
+		const stray = [found.basmala, ...found.verses].reduce((n, p) => n + (p?.stray ?? 0), 0);
+		if (replace.status !== 'error' && stray === 0) return true;
+		console.log(`  ${sura}: replaced (${replace.status === 'error' ? 'failed before' : `${stray} stray frames`})`);
+		await call(`${API}/api/collections/tracks/records/${replace.id}`, { method: 'DELETE' });
 	}
 
 	// Lines of the text with their exact times; the basmala line only when it is recorded
@@ -393,11 +409,12 @@ for (const rec of chosen) {
 	for (const sura of surahList) {
 		const slug = slugOf(rec, sura);
 		try {
-			const existing = await first('tracks', `slug="${slug}"`, 'id,text');
-			if (existing?.text) continue;
+			const existing = await first('tracks', `slug="${slug}"`, 'id,text,status');
+			const complete = existing?.text ? existing : undefined;
+			if (complete && !repair && complete.status !== 'error') continue;
 			// Stopped between the upload and its timings last time: done again
-			if (existing) await call(`${API}/api/collections/tracks/records/${existing.id}`, { method: 'DELETE' });
-			if (!(await importSurah(rec, reciter, sura, slug))) skipped.push(slug);
+			if (existing && !complete) await call(`${API}/api/collections/tracks/records/${existing.id}`, { method: 'DELETE' });
+			if (!(await importSurah(rec, reciter, sura, slug, complete))) skipped.push(slug);
 		} catch (e) {
 			// One surah failing (network, server) does not stop the import; a new run retries it
 			console.log(`  ${sura}: FAILED ${e instanceof Error ? e.message : e}`);
