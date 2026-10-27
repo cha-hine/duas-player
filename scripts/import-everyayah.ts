@@ -18,7 +18,8 @@
 //
 // --repair downloads the verses of the tracks already there too and replaces those whose verse
 // files hold frame-like junk, which the earlier MP3 reader joined into the audio (playback
-// stopping or crackling mid-surah, verses drifting from the text).
+// stopping or crackling mid-surah, verses drifting from the text), or whose cut-off verses
+// can now be taken from another folder.
 import { readFile } from 'node:fs/promises';
 import { isAbsolute, join } from 'node:path';
 import ExcelJS from 'exceljs';
@@ -270,11 +271,24 @@ async function limited<T>(tasks: (() => Promise<T>)[]): Promise<T[]> {
 }
 
 /**
+ * Tells whether a verse recording is cut off: under a quarter of the surah's usual time per
+ * letter of its text (verses of at least 20 letters, so short ones never count).
+ */
+function cutOff(parts: Mp3Part[], letters: number[]) {
+	const pace = parts.map((p, i) => (letters[i] >= 20 ? p.seconds / letters[i] : NaN)).filter((v) => !isNaN(v)).sort((a, b) => a - b);
+	const usual = pace[Math.floor(pace.length / 2)] ?? 0;
+	return (p: Mp3Part, i: number) => letters[i] >= 20 && p.seconds / letters[i] < usual / 4;
+}
+
+/**
  * The verses of `sura` from the first folder that has them all, recorded alike (frames are
  * joined without re-encoding, so one sample rate) and without an extra verse (another verse
  * count), with the basmala before them when recorded alike. `why` says why none fits.
+ * Some EveryAyah files are cut off (a 15 s verse kept as 0.3 s): such a verse is taken from
+ * another folder of the recitation when one has it whole; `cut` lists those left as they are.
  */
-async function recording(rec: Recitation, sura: number, verses: number) {
+async function recording(rec: Recitation, sura: number, letters: number[]) {
+	const verses = letters.length;
 	const why: string[] = [];
 	for (const folder of rec.folders) {
 		if ((await mp3(file(folder, sura, verses + 1))) !== null) {
@@ -300,7 +314,25 @@ async function recording(rec: Recitation, sura: number, verses: number) {
 			if (!alike(basmala)) basmala = await mp3(file(folder, 1, 1));
 			if (!alike(basmala)) basmala = null;
 		}
-		return { folder, basmala, verses: found, why };
+		const isCut = cutOff(found, letters);
+		const cut: number[] = [];
+		let patched = 0;
+		for (let i = 0; i < verses; i++) {
+			if (!isCut(found[i], i)) continue;
+			let whole: Mp3Part | null = null;
+			for (const other of rec.folders.filter((f) => f !== folder)) {
+				const p = await mp3(file(other, sura, i + 1));
+				if (alike(p) && !isCut(p!, i)) {
+					whole = p;
+					break;
+				}
+			}
+			if (whole) {
+				found[i] = whole;
+				patched++;
+			} else cut.push(i + 1);
+		}
+		return { folder, basmala, verses: found, why, patched, cut };
 	}
 	return { why };
 }
@@ -346,15 +378,20 @@ const skipped: string[] = [];
 async function importSurah(rec: Recitation, reciter: string, sura: number, slug: string, replace?: { id: string; status: string }) {
 	const text = texts.get(sura)!;
 	const verseLines = text.lines.filter((l) => l.n);
-	const found = await recording(rec, sura, verseLines.length);
+	const letters = verseLines.map((l) => String(l.ar ?? '').replace(/[\sً-ٰٟۖ-ۭ]/g, '').length);
+	const found = await recording(rec, sura, letters);
 	if (!found.verses) {
 		console.log(`  ${sura}: skipped (${found.why.join('; ')})`);
 		return false;
 	}
+	if (found.cut.length) console.log(`  ${sura}: verses ${found.cut.join(', ')} cut off at EveryAyah, in no other folder`);
 	if (replace) {
 		const stray = [found.basmala, ...found.verses].reduce((n, p) => n + (p?.stray ?? 0), 0);
-		if (replace.status !== 'error' && stray === 0) return true;
-		console.log(`  ${sura}: replaced (${replace.status === 'error' ? 'failed before' : `${stray} stray frames`})`);
+		if (replace.status !== 'error' && stray === 0 && found.patched === 0) return true;
+		const why = replace.status === 'error' ? ['failed before'] : [];
+		if (stray) why.push(`${stray} stray frames`);
+		if (found.patched) why.push(`${found.patched} cut-off verses taken from another folder`);
+		console.log(`  ${sura}: replaced (${why.join(', ')})`);
 		await call(`${API}/api/collections/tracks/records/${replace.id}`, { method: 'DELETE' });
 	}
 
