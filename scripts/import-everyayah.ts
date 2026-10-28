@@ -294,7 +294,8 @@ const hasFfmpeg = () =>
 /** The verse at `url` re-encoded like `like` (sample rate, channels, bitrate), so it can be joined. */
 async function encodeLike(url: string, like: Mp3Part): Promise<Mp3Part> {
 	const input = isLocal(url) ? await readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer());
-	const args = ['-hide_banner', '-loglevel', 'error', '-i', 'pipe:0', '-ar', String(like.sampleRate), '-ac', like.mono ? '1' : '2'];
+	// Only the sound: some verses carry a cover picture, which the tagless output cannot hold
+	const args = ['-hide_banner', '-loglevel', 'error', '-i', 'pipe:0', '-map', '0:a:0', '-ar', String(like.sampleRate), '-ac', like.mono ? '1' : '2'];
 	args.push('-c:a', 'libmp3lame', '-b:a', `${Math.round(like.kbps)}k`, '-write_xing', '0', '-id3v2_version', '0', '-f', 'mp3', 'pipe:1');
 	const child = spawn(FFMPEG, args, { stdio: ['pipe', 'pipe', 'pipe'] });
 	const out: Buffer[] = [];
