@@ -54,66 +54,18 @@ type Recitation = {
 };
 
 const r = (slug: string, fr: string, ar: string) => ({ slug, fr, ar });
-const MUJAWWAD = { fr: 'mujawwad', ar: 'مجوّد' };
 
 const CATALOGUE: Recitation[] = [
 	{ folders: ['Alafasy_128kbps', 'Alafasy_64kbps'], reciter: r('alafasy', 'Mishary Alafasy', 'مشاري راشد العفاسي'), style: 'murattal', language: 'ar' },
 	{ folders: ['Abdul_Basit_Murattal_192kbps', 'Abdul_Basit_Murattal_64kbps', 'AbdulSamad_64kbps_QuranExplorer.Com'], reciter: r('abdul-basit', 'Abdul Basit Abdus-Samad', 'عبد الباسط عبد الصمد'), style: 'murattal', language: 'ar' },
-	{ folders: ['Abdul_Basit_Mujawwad_128kbps'], reciter: r('abdul-basit', 'Abdul Basit Abdus-Samad', 'عبد الباسط عبد الصمد'), style: 'mujawwad', language: 'ar', label: MUJAWWAD },
 	{ folders: ['Husary_128kbps', 'Husary_64kbps'], reciter: r('husary', 'Mahmoud Khalil Al-Husary', 'محمود خليل الحصري'), style: 'murattal', language: 'ar' },
-	{ folders: ['Husary_128kbps_Mujawwad', 'Husary_Mujawwad_64kbps'], reciter: r('husary', 'Mahmoud Khalil Al-Husary', 'محمود خليل الحصري'), style: 'mujawwad', language: 'ar', label: MUJAWWAD },
-	{ folders: ['Husary_Muallim_128kbps'], reciter: r('husary', 'Mahmoud Khalil Al-Husary', 'محمود خليل الحصري'), style: 'muallim', language: 'ar', label: { fr: 'enseignement', ar: 'المعلّم' } },
 	{ folders: ['Minshawy_Murattal_128kbps', 'Menshawi_32kbps'], reciter: r('minshawi', 'Mohamed Siddiq Al-Minshawi', 'محمد صديق المنشاوي'), style: 'murattal', language: 'ar' },
-	{ folders: ['Minshawy_Mujawwad_192kbps', 'Minshawy_Mujawwad_64kbps'], reciter: r('minshawi', 'Mohamed Siddiq Al-Minshawi', 'محمد صديق المنشاوي'), style: 'mujawwad', language: 'ar', label: MUJAWWAD },
 	{ folders: ['Abdurrahmaan_As-Sudais_192kbps', 'Abdurrahmaan_As-Sudais_64kbps'], reciter: r('sudais', 'Abdurrahman As-Sudais', 'عبد الرحمن السديس'), style: 'murattal', language: 'ar' },
 	{ folders: ['Saood_ash-Shuraym_128kbps', 'Saood_ash-Shuraym_64kbps'], reciter: r('shuraim', 'Saud Ash-Shuraim', 'سعود الشريم'), style: 'murattal', language: 'ar' },
 	{ folders: ['MaherAlMuaiqly128kbps', 'Maher_AlMuaiqly_64kbps'], reciter: r('muaiqly', 'Maher Al-Muaiqly', 'ماهر المعيقلي'), style: 'murattal', language: 'ar' },
 	{ folders: ['Abu_Bakr_Ash-Shaatree_128kbps', 'Abu_Bakr_Ash-Shaatree_64kbps'], reciter: r('shatri', 'Abu Bakr Ash-Shatri', 'أبو بكر الشاطري'), style: 'murattal', language: 'ar' },
 	{ folders: ['Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net', 'ahmed_ibn_ali_al_ajamy_128kbps', 'Ahmed_ibn_Ali_al-Ajamy_64kbps_QuranExplorer.Com'], reciter: r('ajamy', 'Ahmed Al-Ajamy', 'أحمد بن علي العجمي'), style: 'murattal', language: 'ar' },
-	{ folders: ['Ghamadi_40kbps'], reciter: r('ghamdi', 'Saad Al-Ghamdi', 'سعد الغامدي'), style: 'murattal', language: 'ar' },
-	{ folders: ['Hani_Rifai_192kbps', 'Hani_Rifai_64kbps'], reciter: r('rifai', 'Hani Ar-Rifai', 'هاني الرفاعي'), style: 'murattal', language: 'ar' },
-	{ folders: ['Hudhaify_128kbps', 'Hudhaify_64kbps', 'Hudhaify_32kbps'], reciter: r('hudhaify', 'Ali Al-Hudhaify', 'علي الحذيفي'), style: 'murattal', language: 'ar' },
-	{ folders: ['Ibrahim_Akhdar_64kbps', 'Ibrahim_Akhdar_32kbps'], reciter: r('akhdar', 'Ibrahim Al-Akhdar', 'إبراهيم الأخضر'), style: 'murattal', language: 'ar' },
-	{ folders: ['Mohammad_al_Tablaway_128kbps', 'Mohammad_al_Tablaway_64kbps'], reciter: r('tablawi', 'Mohammad At-Tablawi', 'محمد محمود الطبلاوي'), style: 'murattal', language: 'ar' },
-	{ folders: ['Muhammad_Ayyoub_128kbps', 'Muhammad_Ayyoub_64kbps', 'Muhammad_Ayyoub_32kbps'], reciter: r('ayyub', 'Muhammad Ayyub', 'محمد أيوب'), style: 'murattal', language: 'ar' },
-	{ folders: ['Muhammad_Jibreel_128kbps', 'Muhammad_Jibreel_64kbps'], reciter: r('jibreel', 'Muhammad Jibreel', 'محمد جبريل'), style: 'murattal', language: 'ar' },
-	{ folders: ['Mustafa_Ismail_48kbps'], reciter: r('mustafa-ismail', 'Mustafa Ismail', 'مصطفى إسماعيل'), style: 'murattal', language: 'ar' },
-	{ folders: ['Abdullah_Basfar_192kbps', 'Abdullah_Basfar_64kbps', 'Abdullah_Basfar_32kbps'], reciter: r('basfar', 'Abdullah Basfar', 'عبد الله بصفر'), style: 'murattal', language: 'ar' },
-	{ folders: ['Salaah_AbdulRahman_Bukhatir_128kbps'], reciter: r('bukhatir', 'Salah Bukhatir', 'صلاح بو خاطر'), style: 'murattal', language: 'ar' },
-	{ folders: ['Muhsin_Al_Qasim_192kbps'], reciter: r('muhsin-al-qasim', 'Muhsin Al-Qasim', 'محسن القاسم'), style: 'murattal', language: 'ar' },
-	{ folders: ['Abdullaah_3awwaad_Al-Juhaynee_128kbps'], reciter: r('juhany', 'Abdullah Al-Juhany', 'عبد الله عواد الجهني'), style: 'murattal', language: 'ar' },
-	{ folders: ['Salah_Al_Budair_128kbps'], reciter: r('budair', 'Salah Al-Budair', 'صلاح البدير'), style: 'murattal', language: 'ar' },
-	{ folders: ['Abdullah_Matroud_128kbps'], reciter: r('matroud', 'Abdullah Al-Matroud', 'عبد الله المطرود'), style: 'murattal', language: 'ar' },
-	{ folders: ['Ahmed_Neana_128kbps'], reciter: r('neana', 'Ahmed Neana', 'أحمد نعينع'), style: 'murattal', language: 'ar' },
-	{ folders: ['Muhammad_AbdulKareem_128kbps'], reciter: r('muhammad-abdulkareem', 'Muhammad Abdul Kareem', 'محمد عبد الكريم'), style: 'murattal', language: 'ar' },
-	{ folders: ['khalefa_al_tunaiji_64kbps'], reciter: r('tunaiji', 'Khalifa At-Tunaiji', 'خليفة الطنيجي'), style: 'murattal', language: 'ar' },
-	{ folders: ['mahmoud_ali_al_banna_32kbps'], reciter: r('banna', 'Mahmoud Ali Al-Banna', 'محمود علي البنا'), style: 'murattal', language: 'ar' },
-	{ folders: ['Karim_Mansoori_40kbps'], reciter: r('karim-mansouri', 'Karim Mansouri', 'كريم منصوري'), style: 'murattal', language: 'ar' },
-	{ folders: ['Parhizgar_48kbps'], reciter: r('parhizgar', 'Shahriar Parhizgar', 'شهريار پرهيزگار'), style: 'murattal', language: 'ar' },
-	{ folders: ['Khaalid_Abdullaah_al-Qahtaanee_192kbps'], reciter: r('qahtani', 'Khalid Al-Qahtani', 'خالد القحطاني'), style: 'murattal', language: 'ar' },
-	{ folders: ['Yasser_Ad-Dussary_128kbps'], reciter: r('dossari', 'Yasser Ad-Dossari', 'ياسر الدوسري'), style: 'murattal', language: 'ar' },
-	{ folders: ['Nasser_Alqatami_128kbps'], reciter: r('qatami', 'Nasser Al-Qatami', 'ناصر القطامي'), style: 'murattal', language: 'ar' },
-	{ folders: ['Ali_Hajjaj_AlSuesy_128kbps'], reciter: r('suwaisi', 'Ali Hajjaj As-Suwaisi', 'علي حجاج السويسي'), style: 'murattal', language: 'ar' },
-	{ folders: ['Sahl_Yassin_128kbps'], reciter: r('sahl-yassin', 'Sahl Yassin', 'سهل ياسين'), style: 'murattal', language: 'ar' },
-	{ folders: ['aziz_alili_128kbps'], reciter: r('alili', 'Aziz Alili', 'عزيز عليلي'), style: 'murattal', language: 'ar' },
-	{ folders: ['Yaser_Salamah_128kbps'], reciter: r('yaser-salamah', 'Yaser Salamah', 'ياسر سلامة'), style: 'murattal', language: 'ar' },
-	{ folders: ['Akram_AlAlaqimy_128kbps'], reciter: r('alaqimy', 'Akram Al-Alaqimy', 'أكرم العلاقمي'), style: 'murattal', language: 'ar' },
-	{ folders: ['Ali_Jaber_64kbps'], reciter: r('ali-jaber', 'Ali Jaber', 'علي جابر'), style: 'murattal', language: 'ar' },
-	{ folders: ['Fares_Abbad_64kbps'], reciter: r('fares-abbad', 'Fares Abbad', 'فارس عباد'), style: 'murattal', language: 'ar' },
-	{ folders: ['Ayman_Sowaid_64kbps'], reciter: r('ayman-suwaid', 'Ayman Suwaid', 'أيمن سويد'), style: 'murattal', language: 'ar' },
-	// Warsh 'an Nafi': the text shown is Hafs; surahs whose verses are counted differently are skipped
-	{ folders: ['warsh/warsh_ibrahim_aldosary_128kbps'], reciter: r('ibrahim-dosary', 'Ibrahim Ad-Dosary', 'إبراهيم الدوسري'), style: 'warsh', language: 'ar', label: { fr: 'warsh', ar: 'ورش' } },
-	{ folders: ['warsh/warsh_yassin_al_jazaery_64kbps'], reciter: r('yassin-al-jazairi', 'Yassin Al-Jazairi', 'ياسين الجزائري'), style: 'warsh', language: 'ar', label: { fr: 'warsh', ar: 'ورش' } },
-	{ folders: ['warsh/warsh_Abdul_Basit_128kbps'], reciter: r('abdul-basit', 'Abdul Basit Abdus-Samad', 'عبد الباسط عبد الصمد'), style: 'warsh', language: 'ar', label: { fr: 'warsh', ar: 'ورش' } },
-	// Recited translations (verse by verse, sometimes after the Arabic)
-	{ folders: ['MultiLanguage/Basfar_Walk_192kbps'], reciter: r('basfar', 'Abdullah Basfar', 'عبد الله بصفر'), style: 'translation', language: 'en', label: { fr: 'avec traduction anglaise (Ibrahim Walk)', ar: 'مع الترجمة الإنجليزية' } },
-	{ folders: ['English/Sahih_Intnl_Ibrahim_Walk_192kbps'], reciter: r('ibrahim-walk', 'Ibrahim Walk', 'إبراهيم ووك'), style: 'translation', language: 'en', label: { fr: 'traduction anglaise (Sahih International)', ar: 'الترجمة الإنجليزية' } },
-	{ folders: ['translations/Makarem_Kabiri_16Kbps'], reciter: r('kabiri', 'Kabiri', 'کبیری'), style: 'translation', language: 'fa', label: { fr: 'traduction persane (Makarem)', ar: 'الترجمة الفارسية' } },
-	{ folders: ['translations/Fooladvand_Hedayatfar_40Kbps'], reciter: r('hedayatfar', 'Hedayatfar', 'هدایت‌فر'), style: 'translation', language: 'fa', label: { fr: 'traduction persane (Fooladvand)', ar: 'الترجمة الفارسية' } },
-	{ folders: ['translations/urdu_shamshad_ali_khan_46kbps'], reciter: r('shamshad-ali-khan', 'Shamshad Ali Khan', 'شمشاد علی خان'), style: 'translation', language: 'ur', label: { fr: 'traduction ourdoue', ar: 'الترجمة الأردية' } },
-	{ folders: ['translations/urdu_farhat_hashmi'], reciter: r('farhat-hashmi', 'Farhat Hashmi', 'فرحت ہاشمی'), style: 'translation', language: 'ur', label: { fr: 'traduction ourdoue mot à mot', ar: 'الترجمة الأردية' } },
-	{ folders: ['translations/azerbaijani/balayev'], reciter: r('balayev', 'Balayev', 'بالايف'), style: 'translation', language: 'az', label: { fr: 'traduction azérie', ar: 'الترجمة الأذرية' } },
-	{ folders: ['translations/besim_korkut_ajet_po_ajet'], reciter: r('besim-korkut', 'Besim Korkut', 'بسيم كوركوت'), style: 'translation', language: 'other', label: { fr: 'traduction bosniaque', ar: 'الترجمة البوسنية' } }
+	{ folders: ['Ghamadi_40kbps'], reciter: r('ghamdi', 'Saad Al-Ghamdi', 'سعد الغامدي'), style: 'murattal', language: 'ar' }
 ];
 
 // ——— Arguments ———

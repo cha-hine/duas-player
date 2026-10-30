@@ -1,10 +1,11 @@
-// Fills the "translations" collection with every translation of the "41 traductions du Coran"
-// spreadsheet: one record per translator and surah (basmala and verses), which listeners
-// choose from in the text settings. Records already there are updated, so it can run again.
+// Fills the "translations" collection with the translations of the "41 traductions du Coran"
+// spreadsheet the site offers (OFFERED, or those given with --only): one record per translator
+// and surah (basmala and verses), which listeners choose from in the text settings.
+// Records already there are updated, so it can run again.
 //
 //   cd scripts
 //   $env:SAKINA_EMAIL = "you@example.com"; $env:SAKINA_PASSWORD = "..."
-//   node import-translations.ts --xlsx C:\path\41-traductions-Coran.xlsx [--only Hamidullah,Masson]
+//   node import-translations.ts --xlsx C:\path\41-traductions-Coran.xlsx [--only Hamidullah,Bonaud]
 import ExcelJS from 'exceljs';
 
 const API = process.env.SAKINA_API ?? 'https://sakina-api.toophan.net';
@@ -19,10 +20,12 @@ function arg(name: string): string | undefined {
 	return i >= 0 ? process.argv[i + 1] : undefined;
 }
 const xlsxPath = arg('xlsx');
-const only = arg('only')?.split(',');
+/** The translations the site offers, as named in the spreadsheet (prune-quran.ts keeps these). */
+const OFFERED = ['Hamidullah', 'Hamidullah révisé', 'Fakhri', 'Bonaud'];
+const only = arg('only')?.split(',') ?? OFFERED;
 if (!xlsxPath || !EMAIL || !PASSWORD) {
 	console.error('Usage: set SAKINA_EMAIL and SAKINA_PASSWORD, then');
-	console.error('  node import-translations.ts --xlsx <file.xlsx> [--only Hamidullah,Masson]');
+	console.error('  node import-translations.ts --xlsx <file.xlsx> [--only Hamidullah,Bonaud]');
 	process.exit(1);
 }
 
@@ -53,7 +56,7 @@ sheet.eachRow((row, r) => {
 	if (r === 1) return;
 	const values = row.values as unknown[];
 	const translator = cell(values[4]).trim();
-	if (NOT_TRANSLATIONS.has(translator) || (only && !only.includes(translator))) return;
+	if (NOT_TRANSLATIONS.has(translator) || !only.includes(translator)) return;
 	if (!byTranslator.has(translator)) byTranslator.set(translator, new Map());
 	byTranslator.get(translator)!.set(`${cell(values[2])}|${cell(values[3])}`, cell(values[5]).trim());
 });

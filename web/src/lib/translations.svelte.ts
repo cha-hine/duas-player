@@ -1,4 +1,4 @@
-// Quran translations listeners choose in the text settings (e.g. one of 41 French ones),
+// Quran translations listeners choose in the text settings (e.g. four French ones),
 // fetched per surah when needed and kept for the visit. Without a choice, the library's own
 // translation shows.
 import { settings } from '#lib/player/settings.svelte.ts';
@@ -40,6 +40,8 @@ class Translations {
 			try {
 				const res = await fetch(`/api/translations/${key}`);
 				if (res.ok) this.texts = { ...this.texts, [key]: await res.json() };
+				// A translation no longer offered: back to the library's own
+				else if (res.status === 404) settings.setTranslator(language, '');
 			} finally {
 				this.#pending.delete(key);
 			}
