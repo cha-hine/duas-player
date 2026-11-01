@@ -27,6 +27,8 @@ const RECITATIONS = [
 ];
 /** Imported by import-everyayah.ts, like BULK in web/src/lib/server/content.ts. */
 const BULK = '(submitted_by = "EveryAyah" || submitted_by = "Le-Coran.com")';
+/** PocketBase filters have no "not (…)". */
+const NOT_BULK = 'submitted_by != "EveryAyah" && submitted_by != "Le-Coran.com"';
 const apply = process.argv.includes('--apply');
 
 if (!EMAIL || !PASSWORD) {
@@ -95,7 +97,7 @@ const kept = new Set(tracks.filter((t) => !extraTracks.includes(t)).map((t) => t
 const candidates = [...new Set(extraTracks.map((t) => t.reciter))].filter((id) => !kept.has(id));
 const emptyReciters: Record<string, string>[] = [];
 for (const id of candidates) {
-	const others = [...(await all('tracks', `reciter = "${id}" && !${BULK}`, 'id')), ...(await all('videos', `reciter = "${id}"`, 'id'))];
+	const others = [...(await all('tracks', `reciter = "${id}" && ${NOT_BULK}`, 'id')), ...(await all('videos', `reciter = "${id}"`, 'id'))];
 	if (others.length === 0) emptyReciters.push(await api(`/api/collections/reciters/records/${id}?fields=id,name_fr`));
 }
 console.log(`\nReciters left without tracks, removed: ${emptyReciters.map((r) => r.name_fr).join(', ') || 'none'}`);
