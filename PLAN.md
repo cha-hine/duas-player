@@ -126,7 +126,7 @@ Only audio of the categories ticked "synced_text" (Coran, Douas, Sahifa, Ziyarat
 - [x] **7.1** Import the 114 surahs with Arabic text (Tanzil, Uthmani; done in 6.7, the basmala on its own line). *Done when:* all verses are in the database.
 - [x] **7.2** Import the French translation (the translator chosen from « 41 traductions du Coran », done in 6.7). *Done when:* each verse has French text.
 - [x] **7.3** Surah list (search by name or number) and surah reading page (`/coran/<n>`). *Done when:* any surah can be read.
-- [ ] **7.4** Import verse timings for 2–3 chosen reciters. *Done when:* a surah plays with synced verses automatically.
+- [x] **7.4** Import verse timings for chosen reciters (EveryAyah, `scripts/import-everyayah.ts`: one recitation for each of 10 well-known reciters, plus Youssouf Leclerc in French). *Done when:* a surah plays with synced verses automatically.
 - [x] **7.5** Play from any verse; repeat a verse or a range ×1/3/5/10 or in a loop (for memorisation). *Done when:* both work from the reading page.
 - [x] **7.6** Verse markers ۝ with the verse number in the player. *Done when:* they appear after each verse.
 
